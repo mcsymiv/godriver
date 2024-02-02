@@ -3,39 +3,50 @@ package driver
 import (
 	"log"
 	"net/http"
+	"time"
 )
 
 type findStrategy struct {
-	CommandHandler
+	http.Client
 }
 
 func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 	log.Printf("find strategy request: %s", req.URL.Path)
+	var res *http.Response
+	var err error
 
-	response, err := f.CommandHandler(req)
+	res, err = f.Client.Do(req)
+	if res.StatusCode == http.StatusNotFound {
+		log.Printf("element not fount: %v", res.StatusCode)
 
-	log.Printf("find response strategy status code: %v", response.StatusCode)
-
-	return response, err
-}
-
-// openWrapper
-// wraps W3C Navigate To command
-func findWrapper(handler CommandHandler) CommandHandler {
-	return func(req *http.Request) (*http.Response, error) {
-		log.Printf("find request: %s", req.URL.Path)
-
-		response, err := handler(req)
-
-		log.Printf("find response status code: %v", response.StatusCode)
-
-		return response, err
+		start := time.Now()
+		end := start.Add(10 * time.Second)
+		for {
+			time.Sleep(500 * time.Millisecond)
+			res, err = f.Client.Do(req)
+			if err != nil {
+				log.Printf("element not fount: %v", res.StatusCode)
+				return nil, err
+			}
+			if res.StatusCode == http.StatusOK {
+				log.Printf("element fount: %v", res.StatusCode)
+				return res, nil
+			}
+			if time.Now().After(end) {
+				log.Printf("timeout")
+				return res, err
+			}
+		}
 	}
+
+	log.Printf("find response strategy status code: %v", res.StatusCode)
+
+	return res, err
 }
 
 func (d Driver) FindElement(selector string) (*Element, error) {
 	jFind := &JsonFindUsing{
-		Using: ByCssSelector,
+		Using: ByXPath,
 		Value: selector,
 	}
 
@@ -46,7 +57,7 @@ func (d Driver) FindElement(selector string) (*Element, error) {
 	}
 
 	st := &findStrategy{
-		CommandHandler: findWrapper(d.Client.Execute),
+		Client: *d.Client.HTTPClient,
 	}
 
 	res, err := d.Client.ExecuteCommandStrategy(op, st)

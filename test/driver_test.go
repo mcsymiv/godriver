@@ -3,6 +3,7 @@ package test
 import (
 	"log"
 	"testing"
+	"time"
 
 	"github.com/mcsymiv/godriver/capabilities"
 	"github.com/mcsymiv/godriver/driver"
@@ -26,6 +27,10 @@ func TestDriver(t *testing.T) {
 	defer tear()
 
 	d.Open("https://google.com")
-	el, _ := d.FindElement("[id='APjFqb']")
+	el, _ := d.FindElement("//*[@id='APjFqb']")
 	el.Click()
+	el, _ = d.FindElement("//*[@id='Alh6id']//li[1]")
+	el.Click()
+	el, _ = d.FindElement("(//*[@id='rso']//h3)[1]")
+	time.Sleep(5 * time.Second)
 }
