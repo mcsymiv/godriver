@@ -44,17 +44,50 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 	return res, err
 }
 
-func (d Driver) FindElement(selector string) (*Element, error) {
-	jFind := &JsonFindUsing{
+type By struct {
+	Using, Value string
+}
+
+func (d Driver) Find(by By) *Element {
+	el, err := find(by, d)
+	if err != nil {
+		return nil
+	}
+	return el
+}
+
+func (d Driver) FindX(selector string) *Element {
+	by := By{
 		Using: ByXPath,
 		Value: selector,
 	}
 
-	op := &Command{
-		Path:   "/element",
-		Method: http.MethodPost,
-		Data:   marshalData(jFind),
+	el, err := find(by, d)
+	if err != nil {
+		return nil
 	}
+	return el
+}
+
+func (d Driver) FindCss(selector string) *Element {
+	by := By{
+		Using: ByCssSelector,
+		Value: selector,
+	}
+
+	el, err := find(by, d)
+	if err != nil {
+		return nil
+	}
+	return el
+}
+
+func find(by By, d Driver) (*Element, error) {
+	op := d.Commands["find"]
+	op.Data = marshalData(&JsonFindUsing{
+		Using: by.Using,
+		Value: by.Value,
+	})
 
 	st := &findStrategy{
 		Client: *d.Client.HTTPClient,
@@ -75,5 +108,4 @@ func (d Driver) FindElement(selector string) (*Element, error) {
 		Client:  d.Client,
 		Session: d.Session,
 	}, nil
-
 }

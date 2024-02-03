@@ -15,6 +15,7 @@ type Driver struct {
 	Client       *Client
 	Session      *Session
 	ServiceCmd   *exec.Cmd
+	Commands     map[string]*Command
 	Capabilities *capabilities.Capabilities
 }
 
@@ -54,12 +55,23 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 		s,
 	)
 
+	dCommands := registerCommands()
+
 	return &Driver{
 		Client:       c,
 		Session:      s,
 		ServiceCmd:   cmd,
 		Capabilities: &caps,
+		Commands:     dCommands,
 	}
+}
+
+func registerCommands() map[string]*Command {
+	var cmds = make(map[string]*Command)
+	cmds["open"] = &Command{Path: "/url", Method: http.MethodPost}
+	cmds["find"] = &Command{Path: "/element", Method: http.MethodPost}
+
+	return cmds
 }
 
 // Service
