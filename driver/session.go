@@ -59,13 +59,10 @@ func newSession(caps *capabilities.Capabilities) (*Session, error) {
 }
 
 func (d Driver) Quit() {
-	// url := fmt.Sprintf("%s/session/%s", d.Client.BaseURL, d.Session.Id)
-	// req, _ := http.NewRequest(http.MethodDelete, url, nil)
 	q := &Command{
 		Path:   "",
 		Method: http.MethodDelete,
 	}
 
 	d.Client.ExecuteCommandStrategy(q)
-	// d.Client.execRequest(req)
 }

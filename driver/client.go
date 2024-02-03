@@ -47,8 +47,7 @@ func (rr retryRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 // RoundTrip
 // logging decorator for each request to driver server
 func (l logginRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
-	log.Println(r.Method, r.URL.String())
-	r.Header.Add("Accept", "json/application")
+	r.Header.Add("Accept", "application/json")
 	res, err := l.next.RoundTrip(r)
 	if err != nil {
 		log.Println(err, res)

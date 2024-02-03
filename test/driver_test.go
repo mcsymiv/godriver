@@ -3,6 +3,7 @@ package test
 import (
 	"log"
 	"testing"
+	"time"
 
 	"github.com/mcsymiv/godriver/capabilities"
 	"github.com/mcsymiv/godriver/driver"
@@ -13,9 +14,8 @@ func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	if d == nil {
 		log.Fatal("Unable to start driver")
 	}
-	// tear down later
 	return d, func() {
-		// tear-down code here
+		// teardown
 		d.Quit()
 		d.Service().Process.Kill()
 	}
@@ -26,6 +26,7 @@ func TestDriver(t *testing.T) {
 	defer tear()
 
 	d.Open("https://google.com")
-	el, _ := d.FindElement("[id='APjFqb']")
-	el.Click()
+	d.FindX("//*[@id='APjFqb']").Click()
+	d.Find(driver.By{Using: driver.ByXPath, Value: "//*[@id='APjFqb']"}).Click()
+	time.Sleep(5 * time.Second)
 }
