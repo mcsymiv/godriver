@@ -3,7 +3,6 @@ package test
 import (
 	"log"
 	"testing"
-	"time"
 
 	"github.com/mcsymiv/godriver/capabilities"
 	"github.com/mcsymiv/godriver/driver"
@@ -26,7 +25,5 @@ func TestDriver(t *testing.T) {
 	defer tear()
 
 	d.Open("https://google.com")
-	d.FindX("//*[@id='APjFqb']").Click()
-	d.Find(driver.By{Using: driver.ByXPath, Value: "//*[@id='APjFqb']"}).Click()
-	time.Sleep(5 * time.Second)
+	d.FindX("//*[@id='APjFqb']").Click().Key("w3c webdriver")
 }

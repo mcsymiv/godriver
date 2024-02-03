@@ -18,7 +18,7 @@ func (cl clickStrategy) Execute(req *http.Request) (*http.Response, error) {
 	return res, err
 }
 
-func (el Element) Click() error {
+func (el *Element) click() (*Element, error) {
 	op := &Command{
 		Path:   fmt.Sprintf("/element/%s/click", el.Id),
 		Method: http.MethodPost,
@@ -30,8 +30,17 @@ func (el Element) Click() error {
 	_, err := el.Client.ExecuteCommandStrategy(op, st)
 	if err != nil {
 		log.Println("error on click:", err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return el, nil
+}
+
+func (el *Element) Click() *Element {
+	e, err := el.click()
+	if err != nil {
+		return nil
+	}
+
+	return e
 }
