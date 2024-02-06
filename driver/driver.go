@@ -69,7 +69,10 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 func registerCommands() map[string]*Command {
 	var cmds = make(map[string]*Command)
 	cmds["open"] = &Command{Path: "/url", Method: http.MethodPost}
+	cmds["refresh"] = &Command{Path: "/refresh", Method: http.MethodPost}
 	cmds["find"] = &Command{Path: "/element", Method: http.MethodPost}
+	cmds["finds"] = &Command{Path: "/elements", Method: http.MethodPost}
+	cmds["frame"] = &Command{Path: "/frame", Method: http.MethodPost}
 
 	return cmds
 }

@@ -32,14 +32,10 @@ type logginRoundTripper struct {
 // RoundTrip
 // retry decorator
 func (rr retryRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
-	// log.Println("pre-request in retry round tripper:", r.URL.Path)
-
 	res, err := rr.next.RoundTrip(r)
 	if err != nil {
 		return res, err
 	}
-
-	// log.Println("post-response in retry round tripper:", res.StatusCode, res.Status)
 
 	return res, nil
 }
@@ -47,6 +43,7 @@ func (rr retryRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 // RoundTrip
 // logging decorator for each request to driver server
 func (l logginRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
+	log.Printf("req: %s %s", r.Method, r.URL.Path)
 	r.Header.Add("Accept", "application/json")
 	res, err := l.next.RoundTrip(r)
 	if err != nil {
@@ -54,6 +51,7 @@ func (l logginRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
+	log.Printf("res status: %v", res.StatusCode)
 	return res, nil
 }
 
@@ -62,7 +60,7 @@ func newClient(baseURL string, session *Session) *Client {
 	return &Client{
 		BaseURL:            baseURL,
 		Session:            session,
-		RequestReaderLimit: 200,
+		RequestReaderLimit: 2048,
 		HTTPClient: &http.Client{
 			Transport: &retryRoundTripper{
 				maxRetries: 3,
@@ -82,7 +80,7 @@ func (cl Client) Execute(req *http.Request) (*http.Response, error) {
 func (c Client) ExecuteCommandStrategy(cmd *Command, st ...CommandExecutor) (*http.Response, error) {
 	url := fmt.Sprintf("%s%s/%s%s", c.BaseURL, c.Session.Route, c.Session.Id, cmd.Path)
 
-	rr := io.LimitReader(ReusableReader(bytes.NewReader(cmd.Data)), 200)
+	rr := io.LimitReader(ReusableReader(bytes.NewReader(cmd.Data)), c.RequestReaderLimit)
 	reqBody := io.NopCloser(rr)
 	req, err := http.NewRequest(cmd.Method, url, reqBody)
 	if err != nil {
@@ -96,5 +94,4 @@ func (c Client) ExecuteCommandStrategy(cmd *Command, st ...CommandExecutor) (*ht
 	}
 
 	return NewStrategy(c).Exec(req)
-
 }

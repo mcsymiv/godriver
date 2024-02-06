@@ -1,6 +1,10 @@
 package driver
 
-import "log"
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
 
 const (
 	// LegacyWebElementIdentifier is the string constant used in the old Selenium 2 protocol
@@ -48,6 +52,12 @@ type JsonFindUsing struct {
 	Value string `json:"value"`
 }
 
+func (e Element) ElementIdentifier() map[string]string {
+	return map[string]string{
+		WebElementIdentifier: e.Id,
+	}
+}
+
 func elementID(v map[string]string) string {
 	id, ok := v[WebElementIdentifier]
 	if !ok || id == "" {
@@ -68,4 +78,23 @@ func elementsID(v []map[string]string) []string {
 	}
 
 	return els
+}
+
+// Attribute
+// Returns elements attribute value
+func (e *Element) Attribute(a string) (string, error) {
+	op := &Command{
+		Path:   fmt.Sprintf("/element/%s/attribute/%s", e.Id, a),
+		Method: http.MethodGet,
+	}
+
+	res, err := e.Client.ExecuteCommandStrategy(op)
+	if err != nil {
+		return "", err
+	}
+
+	attr := new(struct{ Value string })
+	unmarshalData(res, attr)
+
+	return attr.Value, nil
 }

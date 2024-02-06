@@ -20,11 +20,11 @@ type AlwaysMatch struct {
 	BrowserName         string `json:"browserName"`
 	Timeouts            `json:"timeouts,omitempty"`
 	MozOptions          `json:"moz:firefoxOptions,omitempty"`
+	PageLoad            string `json:"pageLoadStrategy,omitempty"`
 }
 
 type Timeouts struct {
 	Implicit float32 `json:"implicit,omitempty"`
-	PageLoad float32 `json:"pageLoad,omitempty"`
 	Script   float32 `json:"script,omitempty"`
 }
 
@@ -59,6 +59,9 @@ func DefaultCapabilities() Capabilities {
 			AlwaysMatch{
 				AcceptInsecureCerts: true,
 				BrowserName:         "firefox",
+				// Timeouts: Timeouts{
+				// 	PageLoad: "normal",
+				// },
 			},
 		},
 	}
@@ -67,6 +70,12 @@ func DefaultCapabilities() Capabilities {
 func ImplicitWait(w float32) CapabilitiesFunc {
 	return func(cap *Capabilities) {
 		cap.Capabilities.AlwaysMatch.Timeouts.Implicit = w
+	}
+}
+
+func PageLoadStrategy(st string) CapabilitiesFunc {
+	return func(cap *Capabilities) {
+		cap.Capabilities.AlwaysMatch.PageLoad = st
 	}
 }
 

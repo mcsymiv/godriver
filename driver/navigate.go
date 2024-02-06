@@ -16,3 +16,16 @@ func (d Driver) Open(u string) error {
 
 	return nil
 }
+
+func (d Driver) Refresh() error {
+	op := d.Commands["refresh"]
+	op.Data = marshalData(&Empty{})
+
+	_, err := d.Client.ExecuteCommandStrategy(op)
+	if err != nil {
+		log.Println("error on open:", err)
+		return err
+	}
+
+	return nil
+}

@@ -11,11 +11,8 @@ type clickStrategy struct {
 }
 
 func (cl clickStrategy) Execute(req *http.Request) (*http.Response, error) {
-	log.Printf("before click strategy driver request: %s", req.URL.Path)
-	res, err := cl.Client.Do(req)
-	log.Printf("after click strategy driver request: %s", req.URL.Path)
-
-	return res, err
+	log.Printf("click on: %s", req.URL.Path)
+	return cl.Client.Do(req)
 }
 
 func (el *Element) click() (*Element, error) {

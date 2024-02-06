@@ -52,6 +52,8 @@ func newSession(caps *capabilities.Capabilities) (*Session, error) {
 		return nil, err
 	}
 
+	log.Println(reply.Value)
+
 	return &Session{
 		Id:    reply.Value.Id,
 		Route: "/session",
