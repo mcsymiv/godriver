@@ -58,8 +58,6 @@ func unmarshalData(res *http.Response, any interface{}) []byte {
 		return nil
 	}
 
-	log.Println(string(b))
-
 	if err := json.Unmarshal(b, &any); err != nil {
 		log.Println("error on unmarshal:", err)
 		return nil

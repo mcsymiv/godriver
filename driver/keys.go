@@ -2,6 +2,7 @@ package driver
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -69,7 +70,7 @@ const (
 )
 
 func (el *Element) Key(s string) *Element {
-	e, err := el.sendKeys(s)
+	e, err := sendKeys(el, s)
 	if err != nil {
 		return nil
 	}
@@ -77,7 +78,32 @@ func (el *Element) Key(s string) *Element {
 	return e
 }
 
-func (el *Element) sendKeys(s string) (*Element, error) {
+func (el *Element) Clear() *Element {
+	e, err := clear(el)
+	if err != nil {
+		log.Println("error on clear key:", err)
+		return nil
+	}
+
+	return e
+}
+
+func clear(el *Element) (*Element, error) {
+	op := &Command{
+		Path:   fmt.Sprintf("/element/%s/clear", el.Id),
+		Method: http.MethodPost,
+		Data:   marshalData(&Empty{}),
+	}
+
+	_, err := el.Client.ExecuteCommandStrategy(op)
+	if err != nil {
+		return nil, err
+	}
+
+	return el, nil
+}
+
+func sendKeys(el *Element, s string) (*Element, error) {
 	op := &Command{
 		Path:   fmt.Sprintf("/element/%s/value", el.Id),
 		Method: http.MethodPost,

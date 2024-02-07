@@ -95,3 +95,54 @@ func (c Client) ExecuteCommandStrategy(cmd *Command, st ...CommandExecutor) (*ht
 
 	return NewStrategy(c).Exec(req)
 }
+
+type buffResponse struct {
+	*http.Response
+	bodyBuffer *bytes.Buffer
+}
+
+func newResponse(response *http.Response) *buffResponse {
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		log.Println("error on buf write")
+		return nil
+	}
+
+	buffRes := &buffResponse{
+		Response:   response,
+		bodyBuffer: bytes.NewBuffer(body),
+	}
+
+	rr := io.LimitReader(ReusableReader(buffRes.bodyBuffer), 2048*2)
+	resBody := io.NopCloser(rr)
+	buffRes.Response.Body = resBody
+
+	return buffRes
+}
+
+func (c Client) ExecuteCommand(cmd *Command, st ...CommandExecutor) *buffResponse {
+	url := fmt.Sprintf("%s%s/%s%s", c.BaseURL, c.Session.Route, c.Session.Id, cmd.Path)
+
+	rr := io.LimitReader(ReusableReader(bytes.NewReader(cmd.Data)), c.RequestReaderLimit)
+	reqBody := io.NopCloser(rr)
+	req, err := http.NewRequest(cmd.Method, url, reqBody)
+	if err != nil {
+		return nil
+	}
+
+	if len(st) != 0 {
+		for _, s := range st {
+			// At the moment no need in strategy loop
+			// Slice is used as "optional" argument in ExecCmd
+			if res, err := NewStrategy(s).Exec(req); err == nil {
+				return newResponse(res)
+			}
+		}
+	}
+
+	res, err := NewStrategy(c).Exec(req)
+	if err != nil {
+		return nil
+	}
+	return newResponse(res)
+}

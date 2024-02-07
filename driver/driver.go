@@ -73,6 +73,8 @@ func registerCommands() map[string]*Command {
 	cmds["find"] = &Command{Path: "/element", Method: http.MethodPost}
 	cmds["finds"] = &Command{Path: "/elements", Method: http.MethodPost}
 	cmds["frame"] = &Command{Path: "/frame", Method: http.MethodPost}
+	cmds["script"] = &Command{Path: "/execute/sync", Method: http.MethodPost}
+	cmds["source"] = &Command{Path: "/source", Method: http.MethodGet}
 
 	return cmds
 }
