@@ -1,6 +1,7 @@
 package test
 
 import (
+	// "fmt"
 	"fmt"
 	"log"
 	"os"
@@ -35,13 +36,13 @@ func TestDriver(t *testing.T) {
 	host := os.Getenv("DOWNLOAD_HOST")
 	d.Open(fmt.Sprintf("%s%s", host, "/login.html"))
 
-	d.FindX(".//a[text()='Log in using Azure Active Directory']").Click()
+	d.FindX(".//a[text()='Log in using Azure Active Directory']").IsDisplayed().Click()
 	d.FindCss("[id='i0116']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
 	d.FindCss("[id='i0118']").Key(os.Getenv("DOWNLOAD_PASS"))
 
-	time.Sleep(2 * time.Second)
-	d.FindCss("[id='idSIButton9']").Click()
-	d.FindCss("[id='idSIButton9']").Click()
+	time.Sleep(1 * time.Second)
+	d.FindCss("[id='idSIButton9']").IsDisplayed().Click()
+	d.FindX("//*[@value='Так']").IsDisplayed().Click()
 	d.FindX(".//span[text()='Projects']").Click()
 
 	time.Sleep(2 * time.Second)
@@ -60,4 +61,6 @@ func TestDriver(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	d.FindX(".//ul[@class='side-nav__menu']//div[text()='Suites']").Click()
 	d.FindCss("[data-tooltip='Download CSV']").Click()
+
+	time.Sleep(5 * time.Second)
 }

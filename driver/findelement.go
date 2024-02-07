@@ -8,7 +8,6 @@ import (
 
 type findStrategy struct {
 	http.Client
-	Driver
 	Timeout, Delay time.Duration
 }
 
@@ -106,7 +105,6 @@ func find(by By, d Driver) (*Element, error) {
 	})
 
 	st := &findStrategy{
-		Driver:  d,
 		Client:  *d.Client.HTTPClient,
 		Timeout: 15,
 		Delay:   1000,
@@ -138,7 +136,6 @@ func finds(by By, d Driver) ([]*Element, error) {
 
 	st := &findStrategy{
 		Client:  *d.Client.HTTPClient,
-		Driver:  d,
 		Timeout: 15,
 		Delay:   1000,
 	}
