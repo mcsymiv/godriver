@@ -38,6 +38,12 @@ func TestDriver(t *testing.T) {
 	config.LoadEnv("../config", ".env")
 	host := os.Getenv("DOWNLOAD_HOST")
 
+	var rLinks []string
+	sNames := []string{
+		"Smoke (Concurrent tests)",
+		"UI Regression (Concurrent tests)",
+	}
+
 	d.Open(fmt.Sprintf("%s%s", host, "/login.html"))
 	d.FindX(".//a[text()='Log in using Azure Active Directory']").IsDisplayed().Click()
 	d.FindCss("[id='i0116']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
@@ -45,15 +51,21 @@ func TestDriver(t *testing.T) {
 	d.FindX("//input[@value='Увійти']").IsDisplayed().Click()
 	d.FindX("//input[@value='Так']").IsDisplayed().Click()
 	d.FindX("//span[text()='Projects']").IsDisplayed().Click()
-	d.FindCss("[id='search-projects']").Key("dev01")
-	d.FindX("//aside//span[contains(text(),'UI Regression (Concurrent tests)')]").IsDisplayed().Click()
+	d.FindCss("[id='search-projects']").IsDisplayed().Key("dev01")
 
-	buildLinkRaw := d.FindX("(//*[@data-grid-root='true']//*[@data-test='ring-link'])[1]").IsDisplayed().Attribute("href")
-	buildLink := strings.Join(strings.Split(buildLinkRaw, "/")[2:], "/")
+	for _, sName := range sNames {
+		d.FindX(fmt.Sprintf("//aside//span[contains(text(),'%s')]", sName)).IsDisplayed().Click()
 
-	d.Open(fmt.Sprintf("%s%s%s%s", host, repo, buildLink, allure))
-	d.FindX("//ul[@class='side-nav__menu']//div[text()='Suites']").IsDisplayed().Click()
-	d.FindCss("[data-tooltip='Download CSV']").Click()
+		buildLinkRaw := d.FindX("(//*[@data-grid-root='true']//*[@data-test='ring-link'])[1]").IsDisplayed().Attribute("href")
+		buildLink := strings.Join(strings.Split(buildLinkRaw, "/")[2:], "/")
 
-	time.Sleep(5 * time.Second)
+		rLinks = append(rLinks, fmt.Sprintf("%s%s%s%s", host, repo, buildLink, allure))
+	}
+
+	for _, rLink := range rLinks {
+		d.Open(rLink)
+		time.Sleep(5 * time.Second)
+		d.FindCss("[data-tooltip='Download CSV']").Click()
+		time.Sleep(5 * time.Second)
+	}
 }
