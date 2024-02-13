@@ -17,23 +17,27 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 	var err error
 
 	res, err = f.Client.Do(req)
+
 	if res.StatusCode == http.StatusNotFound {
-		// f.Driver.Refresh()
-		// time.Sleep(f.Delay * time.Millisecond)
 		log.Printf("element not fount: %v", res.StatusCode)
 
 		start := time.Now()
 		end := start.Add(f.Timeout * time.Second)
+
 		for {
 			time.Sleep(f.Delay * time.Millisecond)
 			res, err = f.Client.Do(req)
+
 			if err != nil {
 				log.Printf("element not fount: %v", res.StatusCode)
 			}
+
 			if res.StatusCode == http.StatusOK {
 				log.Printf("element fount: %v", res.StatusCode)
+
 				return res, nil
 			}
+
 			if time.Now().After(end) {
 				log.Printf("timeout")
 				return res, err
@@ -50,7 +54,7 @@ type By struct {
 	Using, Value string
 }
 
-func (d Driver) Find(by By) *Element {
+func (d *Driver) Find(by By) *Element {
 	el, err := find(by, d)
 	if err != nil {
 		return nil
@@ -58,7 +62,7 @@ func (d Driver) Find(by By) *Element {
 	return el
 }
 
-func (d Driver) FindX(selector string) *Element {
+func (d *Driver) FindX(selector string) *Element {
 	by := By{
 		Using: ByXPath,
 		Value: selector,
@@ -84,7 +88,7 @@ func (d Driver) FindXs(selector string) []*Element {
 	return el
 }
 
-func (d Driver) FindCss(selector string) *Element {
+func (d *Driver) FindCss(selector string) *Element {
 	by := By{
 		Using: ByCssSelector,
 		Value: selector,
@@ -97,33 +101,41 @@ func (d Driver) FindCss(selector string) *Element {
 	return el
 }
 
-func find(by By, d Driver) (*Element, error) {
-	op := d.Commands["find"]
-	op.Data = marshalData(&JsonFindUsing{
-		Using: by.Using,
-		Value: by.Value,
-	})
-
-	st := &findStrategy{
-		Client:  *d.Client.HTTPClient,
-		Timeout: 15,
-		Delay:   1000,
+// newFindCommand
+// returns default values for
+// /element command to execute
+func newFindCommand(by By, d *Driver) *Command {
+	return &Command{
+		Path:   "/element",
+		Method: http.MethodPost,
+		Data: marshalData(&JsonFindUsing{
+			Using: by.Using,
+			Value: by.Value,
+		}),
+		Strategies: []CommandExecutor{
+			&findStrategy{
+				Client:  *d.Client.HTTPClient,
+				Timeout: 8,
+				Delay:   800,
+			},
+		},
 	}
+}
 
-	res, err := d.Client.ExecuteCommandStrategy(op, st)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
+func find(by By, d *Driver) (*Element, error) {
+	op := newFindCommand(by, d)
+
+	bRes := d.Client.ExecuteCommand(op)
+	defer bRes[0].Response.Body.Close()
 
 	el := new(struct{ Value map[string]string })
-	unmarshalData(res, &el)
+	unmarshalData(bRes[0].Response, &el)
 	eId := elementID(el.Value)
 
 	return &Element{
-		Id:      eId,
-		Client:  d.Client,
-		Session: d.Session,
+		Id:     eId,
+		Driver: d,
+		By:     by,
 	}, nil
 }
 
@@ -147,7 +159,6 @@ func finds(by By, d Driver) ([]*Element, error) {
 	defer res.Body.Close()
 
 	el := new(struct{ Value []map[string]string })
-	log.Println(el.Value)
 	unmarshalData(res, &el)
 	elementsId := elementsID(el.Value)
 
@@ -155,9 +166,8 @@ func finds(by By, d Driver) ([]*Element, error) {
 
 	for _, id := range elementsId {
 		els = append(els, &Element{
-			Id:      id,
-			Client:  d.Client,
-			Session: d.Session,
+			Id:     id,
+			Driver: &d,
 		})
 	}
 

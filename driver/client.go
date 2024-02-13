@@ -19,18 +19,17 @@ type Client struct {
 	DefaultExecuteStrategy CommandExecutor
 }
 
+// retryRoundTripper
+// http.RoundTrip client middleware
+// TODO: add retry logic
+// most of request retries will be handled in strategies
+// serves as a general retry between client and webdriver
 type retryRoundTripper struct {
 	next       http.RoundTripper
 	maxRetries int
 	delay      time.Duration
 }
 
-type logginRoundTripper struct {
-	next http.RoundTripper
-}
-
-// RoundTrip
-// retry decorator
 func (rr retryRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	res, err := rr.next.RoundTrip(r)
 	if err != nil {
@@ -40,8 +39,11 @@ func (rr retryRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	return res, nil
 }
 
-// RoundTrip
-// logging decorator for each request to driver server
+// loggingRoundTripper
+type logginRoundTripper struct {
+	next http.RoundTripper
+}
+
 func (l logginRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	log.Printf("req: %s %s", r.Method, r.URL.Path)
 	r.Header.Add("Accept", "application/json")
@@ -96,53 +98,26 @@ func (c Client) ExecuteCommandStrategy(cmd *Command, st ...CommandExecutor) (*ht
 	return NewStrategy(c).Exec(req)
 }
 
-type buffResponse struct {
-	*http.Response
-	bodyBuffer *bytes.Buffer
-}
-
-func newResponse(response *http.Response) *buffResponse {
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		log.Println("error on buf write")
-		return nil
-	}
-
-	buffRes := &buffResponse{
-		Response:   response,
-		bodyBuffer: bytes.NewBuffer(body),
-	}
-
-	rr := io.LimitReader(ReusableReader(buffRes.bodyBuffer), 2048*2)
-	resBody := io.NopCloser(rr)
-	buffRes.Response.Body = resBody
-
-	return buffRes
-}
-
-func (c Client) ExecuteCommand(cmd *Command, st ...CommandExecutor) *buffResponse {
-	url := fmt.Sprintf("%s%s/%s%s", c.BaseURL, c.Session.Route, c.Session.Id, cmd.Path)
-
-	rr := io.LimitReader(ReusableReader(bytes.NewReader(cmd.Data)), c.RequestReaderLimit)
-	reqBody := io.NopCloser(rr)
-	req, err := http.NewRequest(cmd.Method, url, reqBody)
+// ExecuteCommand
+//  1. general purpose client receiver
+//     executes prepared command and strategies (if defined)
+//     when no strategy difened, executes client request
+//  2. returns response wrapper for multiple reads
+func (c *Client) ExecuteCommand(cmd *Command) []*buffResponse {
+	req, err := newCommandRequest(c, cmd)
 	if err != nil {
 		return nil
 	}
 
-	if len(st) != 0 {
-		for _, s := range st {
-			// At the moment no need in strategy loop
-			// Slice is used as "optional" argument in ExecCmd
-			if res, err := NewStrategy(s).Exec(req); err == nil {
-				return newResponse(res)
-			}
+	st := newExecutorContext(c, cmd)
+	for i, s := range st.cmds {
+		res, err := NewStrategy(s).Exec(req)
+		if err != nil {
+			return nil
 		}
+
+		st.bufs[i] = newBuffResponse(res)
 	}
 
-	res, err := NewStrategy(c).Exec(req)
-	if err != nil {
-		return nil
-	}
-	return newResponse(res)
+	return st.bufs
 }
