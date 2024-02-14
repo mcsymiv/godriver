@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -42,9 +41,9 @@ type Empty struct{}
 // Element
 // W3C WebElement
 type Element struct {
-	Id      string
-	Client  *Client
-	Session *Session
+	Id string
+	By
+	*Driver
 }
 
 type JsonFindUsing struct {
@@ -80,21 +79,27 @@ func elementsID(v []map[string]string) []string {
 	return els
 }
 
+func (e *Element) Attribute(attr string) string {
+	a, err := attribute(e, attr)
+	if err != nil {
+		return ""
+	}
+
+	return a
+}
+
 // Attribute
 // Returns elements attribute value
-func (e *Element) Attribute(a string) (string, error) {
+func attribute(e *Element, a string) (string, error) {
 	op := &Command{
-		Path:   fmt.Sprintf("/element/%s/attribute/%s", e.Id, a),
-		Method: http.MethodGet,
+		PathFormatArgs: []any{e.Id, a},
+		Path:           "/element/%s/attribute/%s",
+		Method:         http.MethodGet,
 	}
 
-	res, err := e.Client.ExecuteCommandStrategy(op)
-	if err != nil {
-		return "", err
-	}
-
+	bRes := e.Client.ExecuteCommand(op)
 	attr := new(struct{ Value string })
-	unmarshalData(res, attr)
+	unmarshalData(bRes[0].Response, attr)
 
 	return attr.Value, nil
 }

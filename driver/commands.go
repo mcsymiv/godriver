@@ -1,7 +1,8 @@
 package driver
 
 import (
-	"encoding/json"
+	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -13,8 +14,14 @@ type CommandHandler func(*http.Request) (*http.Response, error)
 
 // Route represents a specific API route and its handler function.
 type Command struct {
-	Path, Method string
+	Path           string
+	Method         string
+	PathFormatArgs []any
+
 	Data         []byte
+	ResponseData interface{}
+
+	Strategies []CommandExecutor
 }
 
 // strategy to remove duplicates in execute Command/Request
@@ -41,27 +48,71 @@ func (c CommandStrategy) Exec(req *http.Request) (*http.Response, error) {
 	return c.CommandExecutor.Execute(req)
 }
 
-func marshalData(body interface{}) []byte {
-	b, err := json.Marshal(body)
-	if err != nil {
-		log.Println("error on marshal: ", err)
-		return nil
-	}
-
-	return b
+type buffResponse struct {
+	*http.Response
+	*bytes.Buffer
 }
 
-func unmarshalData(res *http.Response, any interface{}) []byte {
-	b, err := io.ReadAll(res.Body)
+type executorContext struct {
+	cmds []CommandExecutor
+	bufs []*buffResponse
+}
+
+// newExecutorContext
+func newExecutorContext(c *Client, cmd *Command) *executorContext {
+	var st []CommandExecutor
+	var buffRes []*buffResponse
+
+	if len(cmd.Strategies) == 0 {
+		st = []CommandExecutor{c}
+		buffRes = make([]*buffResponse, 1)
+	} else {
+		st = cmd.Strategies
+		buffRes = make([]*buffResponse, len(cmd.Strategies))
+	}
+
+	return &executorContext{
+		cmds: st,
+		bufs: buffRes,
+	}
+}
+
+// newBuffResponse
+// reusable response for multiple reads
+func newBuffResponse(response *http.Response) *buffResponse {
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		log.Println("error on reading response:", err)
+		log.Println("error on buf write")
 		return nil
 	}
 
-	if err := json.Unmarshal(b, &any); err != nil {
-		log.Println("error on unmarshal:", err)
-		return nil
+	buffRes := &buffResponse{
+		Response: response,
+		Buffer:   bytes.NewBuffer(body),
 	}
 
-	return b
+	rr := io.LimitReader(ReusableReader(buffRes.Buffer), 2048*2)
+	resBody := io.NopCloser(rr)
+	buffRes.Response.Body = resBody
+
+	return buffRes
+}
+
+// newCommandRequest
+func newCommandRequest(c *Client, cmd *Command) (*http.Request, error) {
+	var cPath string = cmd.Path
+	if len(cmd.PathFormatArgs) != 0 {
+		cPath = fmt.Sprintf(cmd.Path, cmd.PathFormatArgs...)
+	}
+
+	url := fmt.Sprintf("%s%s/%s%s", c.BaseURL, c.Session.Route, c.Session.Id, cPath)
+
+	rr := io.LimitReader(ReusableReader(bytes.NewReader(cmd.Data)), c.RequestReaderLimit)
+	reqBody := io.NopCloser(rr)
+	req, err := http.NewRequest(cmd.Method, url, reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }

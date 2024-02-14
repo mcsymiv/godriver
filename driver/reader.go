@@ -2,8 +2,10 @@ package driver
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"log"
+	"net/http"
 )
 
 // reusableReader
@@ -41,4 +43,29 @@ func (r reusableReader) Read(p []byte) (int, error) {
 
 func (r reusableReader) reset() {
 	io.Copy(r.readBuf, r.backBuf)
+}
+
+func marshalData(body interface{}) []byte {
+	b, err := json.Marshal(body)
+	if err != nil {
+		log.Println("error on marshal: ", err)
+		return nil
+	}
+
+	return b
+}
+
+func unmarshalData(res *http.Response, any interface{}) []byte {
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Println("error on reading response:", err)
+		return nil
+	}
+
+	if err := json.Unmarshal(b, &any); err != nil {
+		log.Println("error on unmarshal:", err)
+		return nil
+	}
+
+	return b
 }

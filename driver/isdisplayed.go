@@ -1,14 +1,12 @@
 package driver
 
 import (
-	"bytes"
-	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"time"
 )
 
+// IsDisplayed
 func (e *Element) IsDisplayed() *Element {
 	dis, err := isDisplayed(e)
 	if err != nil {
@@ -24,90 +22,86 @@ func (e *Element) IsDisplayed() *Element {
 	return e
 }
 
-func isDisplayed(e *Element) (bool, error) {
-	op := &Command{
-		Path:   fmt.Sprintf("/element/%s/displayed", e.Id),
-		Method: http.MethodGet,
-	}
-
-	st := &displayStrategy{
-		Client:  *e.Client.HTTPClient,
-		Timeout: 15,
-		Delay:   1000,
-	}
-
-	res, err := e.Client.ExecuteCommandStrategy(op, st)
-	if err != nil {
-		return false, err
-	}
-
-	d := new(struct{ Value bool })
-	unmarshalData(res, d)
-
-	return d.Value, nil
-}
-
 type displayStrategy struct {
-	http.Client
-	Timeout, Delay time.Duration
+	findReq *http.Request
+	*http.Client
+	timeout, delay time.Duration
 }
 
-type BuffResponse struct {
-	*http.Response
-	bBuffer *bytes.Buffer
-}
+// newDisplayCommand
+// referrences find elememnt cmd
+func newDisplayCommand(e *Element) *Command {
+	fCommand := newFindCommand(e.By, e.Driver)
+	fReq, _ := newCommandRequest(e.Client, fCommand)
 
-func newBuffResponse(response *http.Response) *BuffResponse {
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		log.Println("error on buf write")
-		return nil
+	return &Command{
+		Path:           "/element/%s/displayed",
+		PathFormatArgs: []any{e.Id},
+		Method:         http.MethodGet,
+
+		Strategies: []CommandExecutor{
+			&displayStrategy{
+				Client:  e.Client.HTTPClient,
+				findReq: fReq,
+				timeout: 8,
+				delay:   800,
+			},
+		},
 	}
-
-	buffRes := &BuffResponse{
-		Response: response,
-		bBuffer:  bytes.NewBuffer(body),
-	}
-
-	rr := io.LimitReader(ReusableReader(buffRes.bBuffer), 2048*2)
-	resBody := io.NopCloser(rr)
-	buffRes.Response.Body = resBody
-
-	return buffRes
 }
 
-func (dis *displayStrategy) Execute(req *http.Request) (*http.Response, error) {
-	log.Printf("displaye strategy request: %s", req.URL.Path)
-	var start time.Time = time.Now()
-	var end time.Time = start.Add(dis.Timeout * time.Second)
-
+func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 	var displayRes = new(struct{ Value bool })
-	var dBuffRes *BuffResponse
+	var buffRes *buffResponse
 	var res *http.Response
 	var err error
 
+	// perform isDisplayed check
 	res, err = dis.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
 
-	for {
-		if err != nil {
-			log.Printf("element not fount: %v", res.StatusCode)
-			log.Printf("error in display: %v", err)
-		}
+	// convert response to NopCloser
+	buffRes = newBuffResponse(res)
+	unmarshalData(buffRes.Response, displayRes)
 
-		dBuffRes = newBuffResponse(res)
-		unmarshalData(dBuffRes.Response, displayRes)
+	// start waiter check
+	if !displayRes.Value {
+		log.Println("element is not visible")
+		start := time.Now()
+		end := start.Add(dis.timeout * time.Second)
 
-		if displayRes.Value {
-			log.Printf("element is visible in execute: %v", displayRes)
-			return res, err
-		}
+		for {
+			time.Sleep(dis.delay * time.Millisecond)
+			res, err = dis.Client.Do(req)
+			if err != nil {
+				return nil, err
+			}
 
-		time.Sleep(dis.Delay * time.Millisecond)
-		res, err := dis.Client.Do(req)
+			buffRes = newBuffResponse(res)
+			unmarshalData(buffRes.Response, displayRes)
 
-		if time.Now().After(end) {
-			log.Printf("timeout")
-			return res, err
+			if displayRes.Value {
+				return buffRes.Response, nil
+			}
+
+			if time.Now().After(end) {
+				log.Printf("timeout")
+				return res, err
+			}
 		}
 	}
+
+	return buffRes.Response, err
+}
+
+func isDisplayed(e *Element) (bool, error) {
+	op := newDisplayCommand(e)
+
+	res := e.Client.ExecuteCommand(op)
+	d := new(struct{ Value bool })
+	unmarshalData(res[0].Response, d)
+
+	return d.Value, nil
 }
