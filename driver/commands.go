@@ -51,6 +51,7 @@ func (c CommandStrategy) Exec(req *http.Request) (*http.Response, error) {
 type buffResponse struct {
 	*http.Response
 	*bytes.Buffer
+	buff []byte
 }
 
 type executorContext struct {
@@ -59,6 +60,9 @@ type executorContext struct {
 }
 
 // newExecutorContext
+// creates new CommandExecutor out of defaul client
+// or from passed in command strategies
+// allocates space for buffered command response
 func newExecutorContext(c *Client, cmd *Command) *executorContext {
 	var st []CommandExecutor
 	var buffRes []*buffResponse
@@ -79,6 +83,7 @@ func newExecutorContext(c *Client, cmd *Command) *executorContext {
 
 // newBuffResponse
 // reusable response for multiple reads
+// TODO: think about passing in interface{} of returned struct
 func newBuffResponse(response *http.Response) *buffResponse {
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -87,6 +92,7 @@ func newBuffResponse(response *http.Response) *buffResponse {
 	}
 
 	buffRes := &buffResponse{
+		buff:     body, // TODO: think if buffer will suffice for command read purposes
 		Response: response,
 		Buffer:   bytes.NewBuffer(body),
 	}

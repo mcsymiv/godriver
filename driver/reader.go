@@ -69,3 +69,10 @@ func unmarshalData(res *http.Response, any interface{}) []byte {
 
 	return b
 }
+
+// TODO: consider this unmarshal as oppose to above func
+func unmarshalResponse(rData []byte, any interface{}) {
+	if err := json.Unmarshal(rData, &any); err != nil {
+		log.Println("error on unmarshal response:", err)
+	}
+}
