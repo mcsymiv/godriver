@@ -30,6 +30,9 @@ type retryRoundTripper struct {
 	delay      time.Duration
 }
 
+// RoundTrip
+// middleware for retries
+// TODO: add global retry logic
 func (rr retryRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	res, err := rr.next.RoundTrip(r)
 	if err != nil {
@@ -44,19 +47,20 @@ type logginRoundTripper struct {
 	next http.RoundTripper
 }
 
+// RountTrip
+// middleware logger for Client
 func (l logginRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	log.Printf("req: %s %s", r.Method, r.URL.Path)
-	r.Header.Add("Accept", "application/json")
 	res, err := l.next.RoundTrip(r)
 	if err != nil {
-		log.Println(err, res)
-		return nil, err
+		return nil, fmt.Errorf("error on %v request: %v", r, err)
 	}
 
 	log.Printf("res status: %v", res.StatusCode)
 	return res, nil
 }
 
+// newClient
 // NewRestClient creates a new instance of the REST client with default settings.
 func newClient(baseURL string, session *Session) *Client {
 	return &Client{
@@ -75,7 +79,12 @@ func newClient(baseURL string, session *Session) *Client {
 	}
 }
 
+// Execute
+// default command executor impl
+// performs http.Client request
+// serves as command executor middleware for all command
 func (cl Client) Execute(req *http.Request) (*http.Response, error) {
+	req.Header.Add("Accept", "application/json")
 	return cl.HTTPClient.Do(req)
 }
 
@@ -103,6 +112,7 @@ func (c Client) ExecuteCommandStrategy(cmd *Command, st ...CommandExecutor) (*ht
 //     executes prepared command and strategies (if defined)
 //     when no strategy difened, executes client request
 //  2. returns response wrapper for multiple reads
+//  3. TODO: handle multiple buffResponse without hardcoded slice access, i.e. res[0]; avoid index out of range
 func (c *Client) ExecuteCommand(cmd *Command) []*buffResponse {
 	req, err := newCommandRequest(c, cmd)
 	if err != nil {

@@ -40,8 +40,14 @@ func TestDriver(t *testing.T) {
 
 	var rLinks []string
 	sNames := []string{
-		"Smoke (Concurrent tests)",
-		"UI Regression (Concurrent tests)",
+		os.Getenv("SUITE_NAME_1"),
+		os.Getenv("SUITE_NAME_2"),
+		os.Getenv("SUITE_NAME_3"),
+		os.Getenv("SUITE_NAME_4"),
+		os.Getenv("SUITE_NAME_5"),
+		os.Getenv("SUITE_NAME_6"),
+		os.Getenv("SUITE_NAME_7"),
+		os.Getenv("SUITE_NAME_8"),
 	}
 
 	d.Open(fmt.Sprintf("%s%s", host, "/login.html"))

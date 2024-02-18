@@ -19,16 +19,17 @@ type Session struct {
 	Id, Route string
 }
 
+// newSession
+// hardcoded request to start new webdriver session
 func newSession(caps *capabilities.Capabilities) (*Session, error) {
 	data, err := json.Marshal(caps)
 	if err != nil {
-		log.Printf("new driver marshall error: %+v", err)
-		return nil, err
+		return nil, fmt.Errorf("error on new driver marshal caps: %v", err)
 	}
 	url := fmt.Sprintf("http://%s:%s/session", caps.Host, caps.Port)
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(data))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error on session request: %v", err)
 	}
 
 	req.Header.Add("Accept", "json/application")
@@ -36,20 +37,19 @@ func newSession(caps *capabilities.Capabilities) (*Session, error) {
 	c := &http.Client{}
 	res, err := c.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error on create session request: %v", err)
 	}
 
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error on read responce body")
 	}
 
 	reply := new(struct{ Value JsonSession })
 	if err := json.Unmarshal(body, reply); err != nil {
-		log.Println("Status unmarshal error", err)
-		return nil, err
+		return nil, fmt.Errorf("erron on status unmarshal: %v", err)
 	}
 
 	log.Println(reply.Value)
@@ -60,11 +60,13 @@ func newSession(caps *capabilities.Capabilities) (*Session, error) {
 	}, nil
 }
 
+// Quit
+// closes active webdriver session
 func (d Driver) Quit() {
 	q := &Command{
 		Path:   "",
 		Method: http.MethodDelete,
 	}
 
-	d.Client.ExecuteCommandStrategy(q)
+	d.Client.ExecuteCommand(q)
 }
