@@ -1,14 +1,17 @@
 package driver
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/mcsymiv/godriver/by"
 )
 
 type findStrategy struct {
-	http.Client
-	Timeout, Delay time.Duration
+	Driver
+	timeout, delay time.Duration
 }
 
 func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
@@ -16,21 +19,23 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 	var res *http.Response
 	var err error
 
-	res, err = f.Client.Do(req)
+	res, err = f.Client.HTTPClient.Do(req)
 
 	if res.StatusCode == http.StatusNotFound {
 		log.Printf("element not fount: %v", res.StatusCode)
 
 		start := time.Now()
-		end := start.Add(f.Timeout * time.Second)
+		end := start.Add(f.timeout * time.Second)
 
 		for {
-			time.Sleep(f.Delay * time.Millisecond)
-			res, err = f.Client.Do(req)
-
+			log.Println("in loop")
+			time.Sleep(f.delay * time.Millisecond)
+			res, err = f.Client.HTTPClient.Do(req)
 			if err != nil {
-				log.Printf("element not fount: %v", res.StatusCode)
+				return res, fmt.Errorf("error on find retry: %v", err)
 			}
+
+			log.Println("make request to find element", res.StatusCode)
 
 			if res.StatusCode == http.StatusOK {
 				log.Printf("element fount: %v", res.StatusCode)
@@ -39,8 +44,8 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 			}
 
 			if time.Now().After(end) {
-				log.Printf("timeout")
-				return res, err
+				f.Driver.Screenshot()
+				return res, fmt.Errorf("unable to find element with %v timeout: %v", f.timeout, err)
 			}
 		}
 	}
@@ -50,11 +55,7 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 	return res, err
 }
 
-type By struct {
-	Using, Value string
-}
-
-func (d *Driver) Find(by By) *Element {
+func (d *Driver) Find(by by.Selector) *Element {
 	el, err := find(by, d)
 	if err != nil {
 		return nil
@@ -63,8 +64,8 @@ func (d *Driver) Find(by By) *Element {
 }
 
 func (d *Driver) FindX(selector string) *Element {
-	by := By{
-		Using: ByXPath,
+	by := by.Selector{
+		Using: by.ByXPath,
 		Value: selector,
 	}
 
@@ -75,9 +76,9 @@ func (d *Driver) FindX(selector string) *Element {
 	return el
 }
 
-func (d Driver) FindXs(selector string) []*Element {
-	by := By{
-		Using: ByXPath,
+func (d *Driver) FindXs(selector string) []*Element {
+	by := by.Selector{
+		Using: by.ByXPath,
 		Value: selector,
 	}
 
@@ -89,13 +90,14 @@ func (d Driver) FindXs(selector string) []*Element {
 }
 
 func (d *Driver) FindCss(selector string) *Element {
-	by := By{
-		Using: ByCssSelector,
+	by := by.Selector{
+		Using: by.ByCssSelector,
 		Value: selector,
 	}
 
 	el, err := find(by, d)
 	if err != nil {
+		log.Println(err)
 		return nil
 	}
 	return el
@@ -104,7 +106,7 @@ func (d *Driver) FindCss(selector string) *Element {
 // newFindCommand
 // returns default values for
 // /element command to execute
-func newFindCommand(by By, d *Driver) *Command {
+func newFindCommand(by by.Selector, d *Driver) *Command {
 	return &Command{
 		Path:   "/element",
 		Method: http.MethodPost,
@@ -114,15 +116,15 @@ func newFindCommand(by By, d *Driver) *Command {
 		}),
 		Strategies: []CommandExecutor{
 			&findStrategy{
-				Client:  *d.Client.HTTPClient,
-				Timeout: 8,
-				Delay:   800,
+				Driver:  *d,
+				timeout: 15, // in 15 seconds time window performs up to 2 retries to find element
+				delay:   700,
 			},
 		},
 	}
 }
 
-func find(by By, d *Driver) (*Element, error) {
+func find(by by.Selector, d *Driver) (*Element, error) {
 	op := newFindCommand(by, d)
 
 	bRes := d.Client.ExecuteCommand(op)
@@ -133,13 +135,13 @@ func find(by By, d *Driver) (*Element, error) {
 	eId := elementID(el.Value)
 
 	return &Element{
-		Id:     eId,
-		Driver: d,
-		By:     by,
+		Id:       eId,
+		Driver:   d,
+		Selector: by,
 	}, nil
 }
 
-func finds(by By, d Driver) ([]*Element, error) {
+func finds(by by.Selector, d *Driver) ([]*Element, error) {
 	op := d.Commands["finds"]
 	op.Data = marshalData(&JsonFindUsing{
 		Using: by.Using,
@@ -147,9 +149,9 @@ func finds(by By, d Driver) ([]*Element, error) {
 	})
 
 	st := &findStrategy{
-		Client:  *d.Client.HTTPClient,
-		Timeout: 15,
-		Delay:   1000,
+		Driver:  *d,
+		timeout: 15,
+		delay:   1000,
 	}
 
 	res, err := d.Client.ExecuteCommandStrategy(op, st)
@@ -167,7 +169,7 @@ func finds(by By, d Driver) ([]*Element, error) {
 	for _, id := range elementsId {
 		els = append(els, &Element{
 			Id:     id,
-			Driver: &d,
+			Driver: d,
 		})
 	}
 

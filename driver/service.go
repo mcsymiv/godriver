@@ -18,11 +18,14 @@ type DriverStatus struct {
 	Ready   bool   `json:"ready"`
 }
 
+// newService
+// starts local webdriver service, geckodriver or chromedriver
+// based on passed capabilities i.e. cap.Capabilities.AlwaysMatch.BrowserName
+// defaults to firefox
 func newService(caps *capabilities.Capabilities) (*exec.Cmd, error) {
 	// returns command arguments for specified driver to start from shell
 	var cmdArgs []string = driverCommand(caps)
 
-	// start local webdriver
 	// previously used line to start driver
 	// cmd := exec.Command("zsh", "-c", GeckoDriverrequest, "--port", "4444", ">", "logs/gecko.session.logs", "2>&1", "&")
 	cmd := exec.Command("/bin/zsh", cmdArgs...)

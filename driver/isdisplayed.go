@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -24,14 +25,14 @@ func (e *Element) IsDisplayed() *Element {
 
 type displayStrategy struct {
 	findReq *http.Request
-	*http.Client
+	*Driver
 	timeout, delay time.Duration
 }
 
 // newDisplayCommand
 // referrences find elememnt cmd
 func newDisplayCommand(e *Element) *Command {
-	fCommand := newFindCommand(e.By, e.Driver)
+	fCommand := newFindCommand(e.Selector, e.Driver)
 	fReq, _ := newCommandRequest(e.Client, fCommand)
 
 	return &Command{
@@ -41,7 +42,7 @@ func newDisplayCommand(e *Element) *Command {
 
 		Strategies: []CommandExecutor{
 			&displayStrategy{
-				Client:  e.Client.HTTPClient,
+				Driver:  e.Driver,
 				findReq: fReq,
 				timeout: 8,
 				delay:   800,
@@ -57,7 +58,7 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 	var err error
 
 	// perform isDisplayed check
-	res, err = dis.Client.Do(req)
+	res, err = dis.Client.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -73,10 +74,11 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 		end := start.Add(dis.timeout * time.Second)
 
 		for {
+			log.Println("element still not visible")
 			time.Sleep(dis.delay * time.Millisecond)
-			res, err = dis.Client.Do(req)
+			res, err = dis.Client.HTTPClient.Do(req)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("error")
 			}
 
 			buffRes = newBuffResponse(res)
@@ -87,8 +89,8 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 			}
 
 			if time.Now().After(end) {
-				log.Printf("timeout")
-				return res, err
+				dis.Screenshot()
+				return res, fmt.Errorf("error on element display timeout: %v", err)
 			}
 		}
 	}

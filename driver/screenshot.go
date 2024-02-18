@@ -32,8 +32,7 @@ func newScreenShotCommand() *Command {
 }
 
 // TODO:	make it possible to use inside strategies or commands
-//
-//	for error capturing
+// for error capturing
 func screenshot(d *Driver) error {
 	op := newScreenShotCommand()
 
@@ -56,7 +55,7 @@ func screenshot(d *Driver) error {
 	// Create a new file for the output JPEG image
 	// TODO:	remove hardcoded artifact path
 	// 				upd randSeq, use meaninful screenshot name
-	outputFile, err := os.Create(fmt.Sprintf("../artifacts/%s.jpg", randSeq(8)))
+	outputFile, err := os.Create(fmt.Sprintf("../artifacts/%s_%s.jpg", randSeq(8), time.Now().Format("2006_01_02_15:04:05")))
 	if err != nil {
 		return fmt.Errorf("error on create file: %v", err)
 	}

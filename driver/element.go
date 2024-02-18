@@ -2,7 +2,8 @@ package driver
 
 import (
 	"log"
-	"net/http"
+
+	"github.com/mcsymiv/godriver/by"
 )
 
 const (
@@ -21,17 +22,6 @@ const (
 	ShadowRootIdentifier = "shadow-6066-11e4-a52e-4f735466cecf"
 )
 
-const (
-	ById              = "id" // not speciied by w3c
-	ByXPath           = "xpath"
-	ByLinkText        = "link text"
-	ByPartialLinkText = "partial link text"
-	ByName            = "name" // not specified by w3c
-	ByTagName         = "tag name"
-	ByClassName       = "class name" // not specified by w3c
-	ByCssSelector     = "css selector"
-)
-
 // Empty
 // Due to geckodriver bug: https://github.com/webdriverio/webdriverio/pull/3208
 // "where Geckodriver requires POST requests to have a valid JSON body"
@@ -42,7 +32,7 @@ type Empty struct{}
 // W3C WebElement
 type Element struct {
 	Id string
-	By
+	by.Selector
 	*Driver
 }
 
@@ -77,29 +67,4 @@ func elementsID(v []map[string]string) []string {
 	}
 
 	return els
-}
-
-func (e *Element) Attribute(attr string) string {
-	a, err := attribute(e, attr)
-	if err != nil {
-		return ""
-	}
-
-	return a
-}
-
-// Attribute
-// Returns elements attribute value
-func attribute(e *Element, a string) (string, error) {
-	op := &Command{
-		PathFormatArgs: []any{e.Id, a},
-		Path:           "/element/%s/attribute/%s",
-		Method:         http.MethodGet,
-	}
-
-	bRes := e.Client.ExecuteCommand(op)
-	attr := new(struct{ Value string })
-	unmarshalData(bRes[0].Response, attr)
-
-	return attr.Value, nil
 }
