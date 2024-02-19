@@ -50,8 +50,8 @@ func (c CommandStrategy) Exec(req *http.Request) (*http.Response, error) {
 
 type buffResponse struct {
 	*http.Response
-	*bytes.Buffer
-	buff []byte
+	buff  []byte
+	bRead func() io.ReadCloser // callback when response with body required
 }
 
 type executorContext struct {
@@ -92,14 +92,13 @@ func newBuffResponse(response *http.Response) *buffResponse {
 	}
 
 	buffRes := &buffResponse{
-		buff:     body, // TODO: think if buffer will suffice for command read purposes
+		buff:     body,
 		Response: response,
-		Buffer:   bytes.NewBuffer(body),
+		bRead: func() io.ReadCloser {
+			rr := io.LimitReader(ReusableReader(bytes.NewBuffer(body)), 2048*2)
+			return io.NopCloser(rr)
+		},
 	}
-
-	rr := io.LimitReader(ReusableReader(buffRes.Buffer), 2048*2)
-	resBody := io.NopCloser(rr)
-	buffRes.Response.Body = resBody
 
 	return buffRes
 }

@@ -18,7 +18,7 @@ type reusableReader struct {
 
 func ReusableReader(r io.Reader) io.Reader {
 	readBuf := bytes.Buffer{}
-	_, err := readBuf.ReadFrom(r) // error handling ignored for brevity
+	_, err := readBuf.ReadFrom(r)
 	if err != nil {
 		log.Println("error on reusable reader buffer:", err)
 		return nil
@@ -74,5 +74,13 @@ func unmarshalData(res *http.Response, any interface{}) []byte {
 func unmarshalResponse(rData []byte, any interface{}) {
 	if err := json.Unmarshal(rData, &any); err != nil {
 		log.Println("error on unmarshal response:", err)
+	}
+}
+
+func unmarshalResponses(buffRes []*buffResponse, any ...interface{}) {
+	for i, res := range buffRes {
+		if err := json.Unmarshal(res.buff, &any[i]); err != nil {
+			log.Printf("error on unmarshal %d response: %v", i, err)
+		}
 	}
 }

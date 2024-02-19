@@ -65,7 +65,7 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 
 	// convert response to NopCloser
 	buffRes = newBuffResponse(res)
-	unmarshalData(buffRes.Response, displayRes)
+	unmarshalResponses([]*buffResponse{buffRes}, displayRes)
 
 	// start waiter check
 	if !displayRes.Value {
@@ -82,28 +82,30 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 			}
 
 			buffRes = newBuffResponse(res)
-			unmarshalData(buffRes.Response, displayRes)
+			unmarshalResponses([]*buffResponse{buffRes}, displayRes)
 
 			if displayRes.Value {
+				buffRes.Response.Body = buffRes.bRead()
 				return buffRes.Response, nil
 			}
 
 			if time.Now().After(end) {
 				dis.Screenshot()
-				return res, fmt.Errorf("error on element display timeout: %v", err)
+				return buffRes.Response, fmt.Errorf("error on element display timeout: %v", err)
 			}
 		}
 	}
 
+	buffRes.Response.Body = buffRes.bRead()
 	return buffRes.Response, err
 }
 
 func isDisplayed(e *Element) (bool, error) {
 	op := newDisplayCommand(e)
 
-	res := e.Client.ExecuteCommand(op)
+	buffRes := e.Client.ExecuteCommand(op)
 	d := new(struct{ Value bool })
-	unmarshalData(res[0].Response, d)
+	unmarshalResponses(buffRes, d)
 
 	return d.Value, nil
 }

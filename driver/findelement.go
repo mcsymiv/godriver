@@ -128,10 +128,10 @@ func find(by by.Selector, d *Driver) (*Element, error) {
 	op := newFindCommand(by, d)
 
 	bRes := d.Client.ExecuteCommand(op)
-	defer bRes[0].Response.Body.Close()
+	// defer bRes[0].Response.Body.Close()
 
 	el := new(struct{ Value map[string]string })
-	unmarshalData(bRes[0].Response, &el)
+	unmarshalResponses(bRes, el)
 	eId := elementID(el.Value)
 
 	return &Element{

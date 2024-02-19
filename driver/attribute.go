@@ -22,7 +22,7 @@ func attribute(e *Element, a string) (string, error) {
 
 	bRes := e.Client.ExecuteCommand(op)
 	attr := new(struct{ Value string })
-	unmarshalData(bRes[0].Response, attr)
+	unmarshalResponses(bRes, attr)
 
 	return attr.Value, nil
 }
