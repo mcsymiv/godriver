@@ -31,8 +31,6 @@ func newScreenShotCommand() *Command {
 	}
 }
 
-// TODO:	make it possible to use inside strategies or commands
-// for error capturing
 func screenshot(d *Driver) error {
 	op := newScreenShotCommand()
 

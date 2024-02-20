@@ -1,42 +1,31 @@
 package driver
 
 import (
-	"log"
 	"net/http"
 )
 
-func (el *Element) SwitchFrame() error {
-	op := &Command{
+func newFrameCommand(el *Element) *Command {
+	var elFrameId map[string]string
+
+	if el != nil {
+		elFrameId = el.ElementIdentifier()
+	}
+
+	return &Command{
 		Path:   "/frame",
 		Method: http.MethodPost,
 		Data: marshalData(map[string]interface{}{
-			"id": el.ElementIdentifier(),
+			"id": elFrameId,
 		}),
 	}
-
-	_, err := el.Client.ExecuteCommandStrategy(op)
-	if err != nil {
-		log.Println("Switch frame request error", err)
-		return err
-	}
-
-	return nil
 }
 
-func (el *Element) SwitchFrameParent() error {
-	op := &Command{
-		Path:   "/frame",
-		Method: http.MethodPost,
-		Data: marshalData(map[string]interface{}{
-			"id": nil,
-		}),
-	}
+func (el *Element) SwitchFrame() {
+	op := newFrameCommand(el)
+	el.Client.ExecuteCommand(op)
+}
 
-	_, err := el.Client.ExecuteCommandStrategy(op)
-	if err != nil {
-		log.Println("Switch frame request error", err)
-		return err
-	}
-
-	return nil
+func (el *Element) SwitchFrameParent() {
+	op := newFrameCommand(nil)
+	el.Client.ExecuteCommand(op)
 }

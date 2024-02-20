@@ -28,14 +28,12 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 		end := start.Add(f.timeout * time.Second)
 
 		for {
-			log.Println("in loop")
+			log.Println("find retry")
 			time.Sleep(f.delay * time.Millisecond)
 			res, err = f.Client.HTTPClient.Do(req)
 			if err != nil {
 				return res, fmt.Errorf("error on find retry: %v", err)
 			}
-
-			log.Println("make request to find element", res.StatusCode)
 
 			if res.StatusCode == http.StatusOK {
 				log.Printf("element fount: %v", res.StatusCode)
@@ -128,8 +126,6 @@ func find(by by.Selector, d *Driver) (*Element, error) {
 	op := newFindCommand(by, d)
 
 	bRes := d.Client.ExecuteCommand(op)
-	// defer bRes[0].Response.Body.Close()
-
 	el := new(struct{ Value map[string]string })
 	unmarshalResponses(bRes, el)
 	eId := elementID(el.Value)
@@ -142,26 +138,25 @@ func find(by by.Selector, d *Driver) (*Element, error) {
 }
 
 func finds(by by.Selector, d *Driver) ([]*Element, error) {
-	op := d.Commands["finds"]
-	op.Data = marshalData(&JsonFindUsing{
-		Using: by.Using,
-		Value: by.Value,
-	})
-
-	st := &findStrategy{
-		Driver:  *d,
-		timeout: 15,
-		delay:   1000,
+	op := &Command{
+		Path:   "/elements",
+		Method: http.MethodPost,
+		Data: marshalData(&JsonFindUsing{
+			Using: by.Using,
+			Value: by.Value,
+		}),
+		Strategies: []CommandExecutor{
+			&findStrategy{
+				Driver:  *d,
+				timeout: 15, // in 15 seconds time window performs up to 2 retries to find element
+				delay:   700,
+			},
+		},
 	}
 
-	res, err := d.Client.ExecuteCommandStrategy(op, st)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
+	res := d.Client.ExecuteCommand(op)
 	el := new(struct{ Value []map[string]string })
-	unmarshalData(res, &el)
+	unmarshalResponses(res, &el)
 	elementsId := elementsID(el.Value)
 
 	var els []*Element

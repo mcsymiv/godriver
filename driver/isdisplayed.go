@@ -63,18 +63,18 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	// convert response to NopCloser
+	// get response buffer
+	// reads response body
 	buffRes = newBuffResponse(res)
 	unmarshalResponses([]*buffResponse{buffRes}, displayRes)
 
 	// start waiter check
 	if !displayRes.Value {
-		log.Println("element is not visible")
 		start := time.Now()
 		end := start.Add(dis.timeout * time.Second)
 
 		for {
-			log.Println("element still not visible")
+			log.Println("element is not visible")
 			time.Sleep(dis.delay * time.Millisecond)
 			res, err = dis.Client.HTTPClient.Do(req)
 			if err != nil {
@@ -85,6 +85,7 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 			unmarshalResponses([]*buffResponse{buffRes}, displayRes)
 
 			if displayRes.Value {
+				// get NopCloser response with body
 				buffRes.Response.Body = buffRes.bRead()
 				return buffRes.Response, nil
 			}
@@ -96,6 +97,7 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 		}
 	}
 
+	// get NopCloser response with body
 	buffRes.Response.Body = buffRes.bRead()
 	return buffRes.Response, err
 }

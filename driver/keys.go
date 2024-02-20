@@ -95,10 +95,7 @@ func clear(el *Element) (*Element, error) {
 		Data:   marshalData(&Empty{}),
 	}
 
-	_, err := el.Client.ExecuteCommandStrategy(op)
-	if err != nil {
-		return nil, err
-	}
+	el.Client.ExecuteCommand(op)
 
 	return el, nil
 }
@@ -112,10 +109,6 @@ func sendKeys(el *Element, s string) (*Element, error) {
 		}),
 	}
 
-	_, err := el.Client.ExecuteCommandStrategy(op)
-	if err != nil {
-		return nil, err
-	}
-
+	el.Client.ExecuteCommand(op)
 	return el, nil
 }

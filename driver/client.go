@@ -112,7 +112,6 @@ func (c Client) ExecuteCommandStrategy(cmd *Command, st ...CommandExecutor) (*ht
 //     executes prepared command and strategies (if defined)
 //     when no strategy difened, executes client request
 //  2. returns response wrapper for multiple reads
-//  3. TODO: handle multiple buffResponse without hardcoded slice access, i.e. res[0]; avoid index out of range
 func (c *Client) ExecuteCommand(cmd *Command) []*buffResponse {
 	req, err := newCommandRequest(c, cmd)
 	if err != nil {
