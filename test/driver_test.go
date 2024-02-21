@@ -37,7 +37,7 @@ func TestDriver(t *testing.T) {
 	allure := ":id/allure-report.zip!/allure-report-test/index.html#suites"
 	config.LoadEnv("../config", ".env")
 	host := os.Getenv("DOWNLOAD_HOST")
-	testEnv := "dev01"
+	testEnv := "review01"
 
 	var rLinks []string
 	sNames := []string{
@@ -46,11 +46,11 @@ func TestDriver(t *testing.T) {
 		os.Getenv("SUITE_NAME_3"),
 		os.Getenv("SUITE_NAME_4"),
 		// os.Getenv("SUITE_NAME_5"),
-		os.Getenv("SUITE_NAME_6"),
+		// os.Getenv("SUITE_NAME_6"),
 		os.Getenv("SUITE_NAME_7"),
 		os.Getenv("SUITE_NAME_8"),
 		os.Getenv("SUITE_NAME_9"),
-		os.Getenv("SUITE_NAME_10"),
+		// os.Getenv("SUITE_NAME_10"),
 	}
 
 	d.Open(fmt.Sprintf("%s%s", host, "/login.html"))

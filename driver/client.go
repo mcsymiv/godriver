@@ -80,7 +80,7 @@ func newClient(baseURL string, session *Session) *Client {
 // Execute
 // default command executor impl
 // performs http.Client request
-// serves as command executor middleware for all command
+// serves as command executor middleware for all commands
 func (cl Client) Execute(req *http.Request) (*http.Response, error) {
 	req.Header.Add("Accept", "application/json")
 	return cl.HTTPClient.Do(req)
