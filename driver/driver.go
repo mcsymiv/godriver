@@ -15,10 +15,15 @@ type Driver struct {
 	Client       *Client
 	Session      *Session
 	ServiceCmd   *exec.Cmd
-	Commands     map[string]*Command
 	Capabilities *capabilities.Capabilities
 }
 
+// NewDriver
+// Webdriver setup
+// 1. starts webdriver service based on browser name capabilities
+// 2. wait for service process to start. requests /status with 2 second timeuout
+// 3. creates new session to use
+// 4. initializes new client
 func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 	caps := capabilities.DefaultCapabilities()
 	for _, capFn := range capsFn {
@@ -55,28 +60,12 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 		s,
 	)
 
-	dCommands := registerCommands()
-
 	return &Driver{
 		Client:       c,
 		Session:      s,
 		ServiceCmd:   cmd,
 		Capabilities: &caps,
-		Commands:     dCommands,
 	}
-}
-
-func registerCommands() map[string]*Command {
-	var cmds = make(map[string]*Command)
-	cmds["open"] = &Command{Path: "/url", Method: http.MethodPost}
-	cmds["refresh"] = &Command{Path: "/refresh", Method: http.MethodPost}
-	cmds["find"] = &Command{Path: "/element", Method: http.MethodPost}
-	cmds["finds"] = &Command{Path: "/elements", Method: http.MethodPost}
-	cmds["frame"] = &Command{Path: "/frame", Method: http.MethodPost}
-	cmds["script"] = &Command{Path: "/execute/sync", Method: http.MethodPost}
-	cmds["source"] = &Command{Path: "/source", Method: http.MethodGet}
-
-	return cmds
 }
 
 // Service

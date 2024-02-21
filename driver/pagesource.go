@@ -1,18 +1,19 @@
 package driver
 
-import "log"
+import (
+	"log"
+	"net/http"
+)
 
 func (d Driver) PageSource() {
-
-	op := d.Commands["source"]
-
-	res, err := d.Client.ExecuteCommandStrategy(op)
-	if err != nil {
-		log.Println("error on page sourse")
-		return
+	op := &Command{
+		Path:   "/source",
+		Method: http.MethodGet,
 	}
+
+	bRes := d.Client.ExecuteCommand(op)
 	s := new(struct{ Value string })
-	unmarshalData(res, s)
+	unmarshalResponses(bRes, s)
 
 	log.Println(string(s.Value))
 }

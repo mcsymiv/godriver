@@ -1,9 +1,7 @@
 package driver
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"time"
@@ -82,29 +80,10 @@ func newClient(baseURL string, session *Session) *Client {
 // Execute
 // default command executor impl
 // performs http.Client request
-// serves as command executor middleware for all command
+// serves as command executor middleware for all commands
 func (cl Client) Execute(req *http.Request) (*http.Response, error) {
 	req.Header.Add("Accept", "application/json")
 	return cl.HTTPClient.Do(req)
-}
-
-func (c Client) ExecuteCommandStrategy(cmd *Command, st ...CommandExecutor) (*http.Response, error) {
-	url := fmt.Sprintf("%s%s/%s%s", c.BaseURL, c.Session.Route, c.Session.Id, cmd.Path)
-
-	rr := io.LimitReader(ReusableReader(bytes.NewReader(cmd.Data)), c.RequestReaderLimit)
-	reqBody := io.NopCloser(rr)
-	req, err := http.NewRequest(cmd.Method, url, reqBody)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(st) != 0 {
-		for _, s := range st {
-			return NewStrategy(s).Exec(req)
-		}
-	}
-
-	return NewStrategy(c).Exec(req)
 }
 
 // ExecuteCommand
@@ -112,7 +91,6 @@ func (c Client) ExecuteCommandStrategy(cmd *Command, st ...CommandExecutor) (*ht
 //     executes prepared command and strategies (if defined)
 //     when no strategy difened, executes client request
 //  2. returns response wrapper for multiple reads
-//  3. TODO: handle multiple buffResponse without hardcoded slice access, i.e. res[0]; avoid index out of range
 func (c *Client) ExecuteCommand(cmd *Command) []*buffResponse {
 	req, err := newCommandRequest(c, cmd)
 	if err != nil {

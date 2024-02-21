@@ -63,18 +63,18 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	// convert response to NopCloser
+	// get response buffer
+	// reads response body
 	buffRes = newBuffResponse(res)
-	unmarshalData(buffRes.Response, displayRes)
+	unmarshalResponses([]*buffResponse{buffRes}, displayRes)
 
 	// start waiter check
 	if !displayRes.Value {
-		log.Println("element is not visible")
 		start := time.Now()
 		end := start.Add(dis.timeout * time.Second)
 
 		for {
-			log.Println("element still not visible")
+			log.Println("element is not visible")
 			time.Sleep(dis.delay * time.Millisecond)
 			res, err = dis.Client.HTTPClient.Do(req)
 			if err != nil {
@@ -82,28 +82,32 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 			}
 
 			buffRes = newBuffResponse(res)
-			unmarshalData(buffRes.Response, displayRes)
+			unmarshalResponses([]*buffResponse{buffRes}, displayRes)
 
 			if displayRes.Value {
+				// get NopCloser response with body
+				buffRes.Response.Body = buffRes.bRead()
 				return buffRes.Response, nil
 			}
 
 			if time.Now().After(end) {
 				dis.Screenshot()
-				return res, fmt.Errorf("error on element display timeout: %v", err)
+				return buffRes.Response, fmt.Errorf("error on element display timeout: %v", err)
 			}
 		}
 	}
 
+	// get NopCloser response with body
+	buffRes.Response.Body = buffRes.bRead()
 	return buffRes.Response, err
 }
 
 func isDisplayed(e *Element) (bool, error) {
 	op := newDisplayCommand(e)
 
-	res := e.Client.ExecuteCommand(op)
+	buffRes := e.Client.ExecuteCommand(op)
 	d := new(struct{ Value bool })
-	unmarshalData(res[0].Response, d)
+	unmarshalResponses(buffRes, d)
 
 	return d.Value, nil
 }
