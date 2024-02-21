@@ -2,6 +2,7 @@ package driver
 
 import (
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/mcsymiv/godriver/config"
@@ -54,19 +55,18 @@ func executeScriptSync(d Driver, script string, args ...interface{}) (interface{
 		args = make([]interface{}, 0)
 	}
 
-	op := d.Commands["script"]
-	op.Data = marshalData(map[string]interface{}{
-		"script": script,
-		"args":   args,
-	})
-
-	res, err := d.Client.ExecuteCommandStrategy(op)
-	if err != nil {
-		return nil, err
+	op := &Command{
+		Path:   "/execute/sync",
+		Method: http.MethodPost,
+		Data: marshalData(map[string]interface{}{
+			"script": script,
+			"args":   args,
+		}),
 	}
 
+	bRes := d.Client.ExecuteCommand(op)
 	rr := new(struct{ Value interface{} })
-	unmarshalData(res, rr)
+	unmarshalResponses(bRes, rr)
 
 	return rr.Value, nil
 }

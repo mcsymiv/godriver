@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -17,18 +16,16 @@ func (cl clickStrategy) Execute(req *http.Request) (*http.Response, error) {
 
 func (el *Element) click() (*Element, error) {
 	op := &Command{
-		Path:   fmt.Sprintf("/element/%s/click", el.Id),
-		Method: http.MethodPost,
-		Data:   marshalData(&Empty{}),
+		Path:           "/element/%s/click",
+		PathFormatArgs: []any{el.Id},
+		Method:         http.MethodPost,
+		Data:           marshalData(&Empty{}),
+		Strategies: []CommandExecutor{
+			&clickStrategy{},
+		},
 	}
 
-	st := &clickStrategy{}
-
-	_, err := el.Client.ExecuteCommandStrategy(op, st)
-	if err != nil {
-		log.Println("error on click:", err)
-		return nil, err
-	}
+	el.Client.ExecuteCommand(op)
 
 	return el, nil
 }
