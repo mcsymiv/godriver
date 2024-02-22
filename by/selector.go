@@ -1,5 +1,10 @@
 package by
 
+import (
+	"fmt"
+	"strings"
+)
+
 // w3c Locator strategies
 // src: https://www.w3.org/TR/webdriver2/#locator-strategies
 const (
@@ -12,4 +17,19 @@ const (
 
 type Selector struct {
 	Using, Value string
+}
+
+func DefineStrategy(s string) string {
+	if strings.Contains(s, "/") {
+		return ByXPath
+	}
+
+	return ByCssSelector
+}
+
+func XPathTextStrategy(value string) Selector {
+	return Selector{
+		Using: ByXPath,
+		Value: fmt.Sprintf("//*[text()='%s']", value),
+	}
 }
