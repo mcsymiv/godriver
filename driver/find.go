@@ -81,9 +81,8 @@ func newFindCommand(by by.Selector, d *Driver) *Command {
 func find(by by.Selector, d *Driver) (*Element, error) {
 	op := newFindCommand(by, d)
 
-	bRes := d.Client.ExecuteCommand(op)
 	el := new(struct{ Value map[string]string })
-	unmarshalResponses(bRes, el)
+	d.Client.ExecuteCmd(op, el)
 	eId := elementID(el.Value)
 
 	return &Element{
@@ -110,9 +109,8 @@ func finds(by by.Selector, d *Driver) ([]*Element, error) {
 		},
 	}
 
-	res := d.Client.ExecuteCommand(op)
 	el := new(struct{ Value []map[string]string })
-	unmarshalResponses(res, &el)
+	d.Client.ExecuteCmd(op, []any{el})
 	elementsId := elementsID(el.Value)
 
 	var els []*Element

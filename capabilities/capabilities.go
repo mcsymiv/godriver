@@ -59,9 +59,10 @@ func DefaultCapabilities() Capabilities {
 			AlwaysMatch{
 				AcceptInsecureCerts: true,
 				BrowserName:         "firefox",
-				// Timeouts: Timeouts{
-				// 	PageLoad: "normal",
-				// },
+				PageLoad:            "normal",
+				Timeouts: Timeouts{
+					Implicit: 10000,
+				},
 			},
 		},
 	}
@@ -73,6 +74,8 @@ func ImplicitWait(w float32) CapabilitiesFunc {
 	}
 }
 
+// PageLoadStrategy
+// https://html.spec.whatwg.org/#current-document-readiness
 func PageLoadStrategy(st string) CapabilitiesFunc {
 	return func(cap *Capabilities) {
 		cap.Capabilities.AlwaysMatch.PageLoad = st

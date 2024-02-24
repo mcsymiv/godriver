@@ -34,10 +34,8 @@ func newScreenShotCommand() *Command {
 func screenshot(d *Driver) error {
 	op := newScreenShotCommand()
 
-	buffRes := d.Client.ExecuteCommand(op)
-
 	data := new(struct{ Value string })
-	unmarshalResponse(buffRes[0].buff, data)
+	d.Client.ExecuteCmd(op, []any{data})
 
 	decodedImage, err := base64.StdEncoding.DecodeString(data.Value)
 	if err != nil {

@@ -27,10 +27,7 @@ func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 }
 
 func TestDriver(t *testing.T) {
-	d, tear := Driver(
-		capabilities.ImplicitWait(10000),
-		capabilities.PageLoadStrategy("eager"),
-	)
+	d, tear := Driver()
 	defer tear()
 
 	repo := "/repository/download/"
@@ -80,10 +77,7 @@ func TestDriver(t *testing.T) {
 }
 
 func TestStep(t *testing.T) {
-	d, tear := Driver(
-		capabilities.ImplicitWait(10000),
-		capabilities.PageLoadStrategy("eager"),
-	)
+	d, tear := Driver()
 	defer tear()
 
 	config.LoadEnv("../config", ".env")
@@ -97,5 +91,26 @@ func TestStep(t *testing.T) {
 	d.FindText("Name *").Click()
 	d.GetActive().Key("worked")
 
+	time.Sleep(4 * time.Second)
+}
+
+func TestV2(t *testing.T) {
+	t.Parallel()
+	d, tear := Driver()
+	defer tear()
+
+	d.Open("https://google.com")
+	time.Sleep(4 * time.Second)
+}
+
+func TestV3(t *testing.T) {
+	t.Parallel()
+	d, tear := Driver(
+		capabilities.PageLoadStrategy("eager"),
+		capabilities.BrowserName("chrome"),
+	)
+	defer tear()
+
+	d.Open("https://bing.com")
 	time.Sleep(4 * time.Second)
 }

@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -108,4 +109,36 @@ func (c *Client) ExecuteCommand(cmd *Command) []*buffResponse {
 	}
 
 	return st.bufs
+}
+
+// ExecuteCmd
+//  1. general purpose client receiver
+//     executes prepared command and strategies (if defined)
+//     when no strategy difened, executes client request
+//  2. unmarshals passed data struct
+func (c *Client) ExecuteCmd(cmd *Command, d ...any) {
+	req, err := newCommandRequest(c, cmd)
+	if err != nil {
+		log.Println("error on new command request")
+	}
+
+	st := newExecutorContext(c, cmd)
+	for i, s := range st.cmds {
+		res, err := NewStrategy(s).Exec(req)
+		if err != nil {
+			log.Println("error on new strategy exec")
+		}
+
+		st.bufs[i] = newBuffResponse(res)
+	}
+
+	if len(st.bufs) > 0 {
+		for i, res := range st.bufs {
+			err := json.Unmarshal(res.buff, d[i])
+
+			if err != nil {
+				log.Printf("error on unmarshal %d response: %v", i, err)
+			}
+		}
+	}
 }

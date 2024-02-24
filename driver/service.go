@@ -11,7 +11,7 @@ import (
 )
 
 var GeckoDriverPath string = "/Users/mcs/Documents/tools/geckodriver"
-var ChromeDriverPath string = "/Users/mcs/Documents/tools/chromedriver"
+var ChromeDriverPath string = "/Users/mcs/Documents/tools/chromedriver-mac-arm64/chromedriver"
 
 type DriverStatus struct {
 	Message string `json:"message"`
@@ -28,11 +28,15 @@ func newService(caps *capabilities.Capabilities) (*exec.Cmd, error) {
 
 	// previously used line to start driver
 	// cmd := exec.Command("zsh", "-c", GeckoDriverrequest, "--port", "4444", ">", "logs/gecko.session.logs", "2>&1", "&")
-	cmd := exec.Command("/bin/zsh", cmdArgs...)
+	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
 	err := cmd.Start()
 	if err != nil {
 		log.Println("failed to start driver service:", err)
 		return nil, err
+	}
+
+	if cmd.Process.Pid == 0 {
+		return nil, fmt.Errorf("service did not start")
 	}
 
 	return cmd, nil
@@ -41,8 +45,10 @@ func newService(caps *capabilities.Capabilities) (*exec.Cmd, error) {
 // driverCommand
 // Check for specified driver/browser name to pass to cmd to start the driver server
 func driverCommand(cap *capabilities.Capabilities) []string {
+	// when calling /bin/zsh -c command
+	// command arguments will be ignored
 	var cmdArgs []string = []string{
-		"-c",
+		// "-c",
 	}
 
 	if cap.Capabilities.AlwaysMatch.BrowserName == "firefox" {
@@ -51,7 +57,8 @@ func driverCommand(cap *capabilities.Capabilities) []string {
 		cmdArgs = append(cmdArgs, ChromeDriverPath, fmt.Sprintf("--port=%s", cap.Port))
 	}
 
-	cmdArgs = append(cmdArgs, ">", "logs/session.log", "2>&1", "&")
+	// redirect output argumetns ignored when used in exec.Command
+	// cmdArgs = append(cmdArgs, ">", "logs/session.log", "2>&1", "&")
 	return cmdArgs
 }
 
@@ -59,7 +66,7 @@ func waitForDriverService(cmd *exec.Cmd, caps *capabilities.Capabilities) error 
 	// Tries to get driver status for 2 seconds
 	// Once driver isReady, returns command for deferred kill
 	start := time.Now()
-	end := start.Add(2 * time.Second)
+	end := start.Add(4 * time.Second)
 	for stat, err := getDriverStatus(caps); err != nil || !stat.Ready; stat, err = getDriverStatus(caps) {
 		time.Sleep(200 * time.Millisecond)
 		log.Println("Error getting driver status:", err)

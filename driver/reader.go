@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"log"
-	"net/http"
 )
 
 // reusableReader
@@ -55,32 +54,14 @@ func marshalData(body interface{}) []byte {
 	return b
 }
 
-func unmarshalData(res *http.Response, any interface{}) []byte {
-	b, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Println("error on reading response:", err)
-		return nil
-	}
-
-	if err := json.Unmarshal(b, &any); err != nil {
-		log.Println("error on unmarshal:", err)
-		return nil
-	}
-
-	return b
-}
-
-// TODO: consider this unmarshal as oppose to above func
-func unmarshalResponse(rData []byte, any interface{}) {
-	if err := json.Unmarshal(rData, &any); err != nil {
-		log.Println("error on unmarshal response:", err)
-	}
-}
-
 func unmarshalResponses(buffRes []*buffResponse, any ...interface{}) {
-	for i, res := range buffRes {
-		if err := json.Unmarshal(res.buff, &any[i]); err != nil {
-			log.Printf("error on unmarshal %d response: %v", i, err)
+	if len(buffRes) > 0 {
+		for i, res := range buffRes {
+			err := json.Unmarshal(res.buff, &any[i])
+
+			if err != nil {
+				log.Printf("error on unmarshal %d response: %v", i, err)
+			}
 		}
 	}
 }
