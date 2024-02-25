@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"time"
 
@@ -18,6 +19,9 @@ type DriverStatus struct {
 	Ready   bool   `json:"ready"`
 }
 
+// TODO: add service wrapper for log file and exec.Cmd
+var OutFileLogs *os.File
+
 // newService
 // starts local webdriver service, geckodriver or chromedriver
 // based on passed capabilities i.e. cap.Capabilities.AlwaysMatch.BrowserName
@@ -28,8 +32,17 @@ func newService(caps *capabilities.Capabilities) (*exec.Cmd, error) {
 
 	// previously used line to start driver
 	// cmd := exec.Command("zsh", "-c", GeckoDriverrequest, "--port", "4444", ">", "logs/gecko.session.logs", "2>&1", "&")
+	// open the out file for writing
+	OutFileLogs, err := os.Create("../artifacts/logs/logs.txt")
+	if err != nil {
+		log.Println("failed to start driver service:", err)
+	}
+
 	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
-	err := cmd.Start()
+	cmd.Stdout = OutFileLogs
+	cmd.Stderr = OutFileLogs
+
+	err = cmd.Start()
 	if err != nil {
 		log.Println("failed to start driver service:", err)
 		return nil, err
@@ -52,7 +65,7 @@ func driverCommand(cap *capabilities.Capabilities) []string {
 	}
 
 	if cap.Capabilities.AlwaysMatch.BrowserName == "firefox" {
-		cmdArgs = append(cmdArgs, GeckoDriverPath, "--port", cap.Port)
+		cmdArgs = append(cmdArgs, GeckoDriverPath, "--port", cap.Port, "--log", "trace")
 	} else {
 		cmdArgs = append(cmdArgs, ChromeDriverPath, fmt.Sprintf("--port=%s", cap.Port))
 	}

@@ -110,7 +110,7 @@ func finds(by by.Selector, d *Driver) ([]*Element, error) {
 	}
 
 	el := new(struct{ Value []map[string]string })
-	d.Client.ExecuteCmd(op, []any{el})
+	d.Client.ExecuteCmd(op, el)
 	elementsId := elementsID(el.Value)
 
 	var els []*Element

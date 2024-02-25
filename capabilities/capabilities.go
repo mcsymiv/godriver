@@ -88,12 +88,38 @@ func Firefox(moz *MozOptions) CapabilitiesFunc {
 	}
 }
 
+func HeadLess() CapabilitiesFunc {
+	return func(cap *Capabilities) {
+		cap.Capabilities.AlwaysMatch.MozOptions = MozOptions{
+			Args: []string{"-headless"},
+		}
+	}
+}
+
+func Profile(profilePath string) CapabilitiesFunc {
+	return func(cap *Capabilities) {
+		cap.Capabilities.AlwaysMatch.MozOptions = MozOptions{
+			Binary: "/Applications/Firefox.app/Contents/MacOS/firefox",
+			Args:   []string{"-profile", profilePath},
+		}
+	}
+}
+
+func TraceLog() CapabilitiesFunc {
+	return func(cap *Capabilities) {
+		cap.Capabilities.AlwaysMatch.Log = Log{
+			Level: "trace",
+		}
+	}
+}
+
 func BrowserName(b string) CapabilitiesFunc {
 	return func(cap *Capabilities) {
 		cap.Capabilities.AlwaysMatch.BrowserName = b
 	}
 }
 
+// DriverSetupCapabilities
 func Port(p string) CapabilitiesFunc {
 	return func(caps *Capabilities) {
 		caps.DriverSetupCapabilities.Port = p

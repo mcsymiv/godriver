@@ -126,7 +126,7 @@ func (c *Client) ExecuteCmd(cmd *Command, d ...any) {
 	for i, s := range st.cmds {
 		res, err := NewStrategy(s).Exec(req)
 		if err != nil {
-			log.Println("error on new strategy exec")
+			log.Println("error on new strategy exec", err)
 		}
 
 		st.bufs[i] = newBuffResponse(res)

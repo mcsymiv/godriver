@@ -22,6 +22,7 @@ func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	return d, func() {
 		// teardown
 		d.Quit()
+		driver.OutFileLogs.Close()
 		d.Service().Process.Kill()
 	}
 }
@@ -77,7 +78,10 @@ func TestDriver(t *testing.T) {
 }
 
 func TestStep(t *testing.T) {
-	d, tear := Driver()
+	d, tear := Driver(
+		capabilities.TraceLog(),
+		capabilities.Port("4445"),
+	)
 	defer tear()
 
 	config.LoadEnv("../config", ".env")
