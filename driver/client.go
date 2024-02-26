@@ -84,7 +84,14 @@ func newClient(baseURL string, session *Session) *Client {
 // serves as command executor middleware for all commands
 func (cl Client) Execute(req *http.Request) (*http.Response, error) {
 	req.Header.Add("Accept", "application/json")
-	return cl.HTTPClient.Do(req)
+	req.Header.Add("Content-Type", "application/json")
+	res, err := cl.HTTPClient.Do(req)
+	if err != nil {
+		log.Println("error on strategy exec:", err)
+		return nil, err
+	}
+
+	return res, nil
 }
 
 // ExecuteCommand
@@ -102,6 +109,7 @@ func (c *Client) ExecuteCommand(cmd *Command) []*buffResponse {
 	for i, s := range st.cmds {
 		res, err := NewStrategy(s).Exec(req)
 		if err != nil {
+			log.Println("error on strategy exec:", err)
 			return nil
 		}
 
@@ -126,13 +134,14 @@ func (c *Client) ExecuteCmd(cmd *Command, d ...any) {
 	for i, s := range st.cmds {
 		res, err := NewStrategy(s).Exec(req)
 		if err != nil {
-			log.Println("error on new strategy exec", err)
+			log.Printf("error on new strategy exec: %+v", err)
+			return
 		}
 
 		st.bufs[i] = newBuffResponse(res)
 	}
 
-	if len(st.bufs) > 0 {
+	if len(st.bufs) > 0 && len(d) > 0 {
 		for i, res := range st.bufs {
 			err := json.Unmarshal(res.buff, d[i])
 

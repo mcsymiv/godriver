@@ -19,6 +19,7 @@ type AlwaysMatch struct {
 	AcceptInsecureCerts bool   `json:"acceptInsecureCerts"`
 	BrowserName         string `json:"browserName"`
 	Timeouts            `json:"timeouts,omitempty"`
+	ChromeOptions       `json:"goog:chromeOptions,omitempty"`
 	MozOptions          `json:"moz:firefoxOptions,omitempty"`
 	PageLoad            string `json:"pageLoadStrategy,omitempty"`
 }
@@ -26,6 +27,11 @@ type AlwaysMatch struct {
 type Timeouts struct {
 	Implicit float32 `json:"implicit,omitempty"`
 	Script   float32 `json:"script,omitempty"`
+}
+
+type ChromeOptions struct {
+	Binary string   `json:"binary,omitempty"`
+	Args   []string `json:"args,omitempty"`
 }
 
 type MozOptions struct {
@@ -82,33 +88,10 @@ func PageLoadStrategy(st string) CapabilitiesFunc {
 	}
 }
 
-func Firefox(moz *MozOptions) CapabilitiesFunc {
-	return func(cap *Capabilities) {
-		cap.Capabilities.AlwaysMatch.MozOptions = *moz
-	}
-}
-
 func HeadLess() CapabilitiesFunc {
 	return func(cap *Capabilities) {
 		cap.Capabilities.AlwaysMatch.MozOptions = MozOptions{
 			Args: []string{"-headless"},
-		}
-	}
-}
-
-func Profile(profilePath string) CapabilitiesFunc {
-	return func(cap *Capabilities) {
-		cap.Capabilities.AlwaysMatch.MozOptions = MozOptions{
-			Binary: "/Applications/Firefox.app/Contents/MacOS/firefox",
-			Args:   []string{"-profile", profilePath},
-		}
-	}
-}
-
-func TraceLog() CapabilitiesFunc {
-	return func(cap *Capabilities) {
-		cap.Capabilities.AlwaysMatch.Log = Log{
-			Level: "trace",
 		}
 	}
 }

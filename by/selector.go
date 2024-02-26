@@ -27,9 +27,12 @@ func DefineStrategy(s string) string {
 	return ByCssSelector
 }
 
+// XPathTextStrategy
+// text/value based find strategy
+// TODO: remove duplicates in fmt.Sprinf
 func XPathTextStrategy(value string) Selector {
 	return Selector{
 		Using: ByXPath,
-		Value: fmt.Sprintf("//*[text()='%s']", value),
+		Value: fmt.Sprintf("//*[text()='%s'] | //*[@placeholder='%s'] | //*[@value='%s']", value, value, value),
 	}
 }

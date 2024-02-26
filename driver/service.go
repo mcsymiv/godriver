@@ -67,7 +67,7 @@ func driverCommand(cap *capabilities.Capabilities) []string {
 	if cap.Capabilities.AlwaysMatch.BrowserName == "firefox" {
 		cmdArgs = append(cmdArgs, GeckoDriverPath, "--port", cap.Port, "--log", "trace")
 	} else {
-		cmdArgs = append(cmdArgs, ChromeDriverPath, fmt.Sprintf("--port=%s", cap.Port))
+		cmdArgs = append(cmdArgs, ChromeDriverPath, fmt.Sprintf("--port=%s", cap.Port), "--verbose", "--whitelisted-ips", "--log-path=chromedriver.log")
 	}
 
 	// redirect output argumetns ignored when used in exec.Command

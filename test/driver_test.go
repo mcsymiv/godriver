@@ -21,7 +21,7 @@ func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	}
 	return d, func() {
 		// teardown
-		d.Quit()
+		// d.Quit()
 		driver.OutFileLogs.Close()
 		d.Service().Process.Kill()
 	}
@@ -79,7 +79,6 @@ func TestDriver(t *testing.T) {
 
 func TestStep(t *testing.T) {
 	d, tear := Driver(
-		capabilities.TraceLog(),
 		capabilities.Port("4445"),
 	)
 	defer tear()
@@ -89,15 +88,14 @@ func TestStep(t *testing.T) {
 	d.Open(os.Getenv("LOCAL_HOST"))
 	d.Find("//*[@id='btn-sign-in']").Key(driver.EnterKey)
 
-	d.FindText("My Account").Click()
-	d.FindText("Manage Asset Types").Click()
-	d.FindText("Add Root Item").Click()
-	d.FindText("Name *").Click()
-	d.GetActive().Key("worked")
+	d.FindText("Search").Key("\"QAAuto_Digital_Template_Asset_Output_Type\"").Key(driver.EnterKey)
+	d.Find("//*[@data-qa-id='mode-edit']").Click()
 
 	time.Sleep(4 * time.Second)
 }
 
+// TestV2, TestV3
+// demo tests to run in parallel
 func TestV2(t *testing.T) {
 	t.Parallel()
 	d, tear := Driver()
@@ -110,11 +108,11 @@ func TestV2(t *testing.T) {
 func TestV3(t *testing.T) {
 	t.Parallel()
 	d, tear := Driver(
-		capabilities.PageLoadStrategy("eager"),
 		capabilities.BrowserName("chrome"),
 	)
 	defer tear()
 
-	d.Open("https://bing.com")
-	time.Sleep(4 * time.Second)
+	time.Sleep(9 * time.Second)
+	d.Open("https://google.com")
+	time.Sleep(9 * time.Second)
 }

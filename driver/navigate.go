@@ -5,7 +5,7 @@ import (
 )
 
 func (d Driver) Open(u string) {
-	d.Client.ExecuteCommand(&Command{
+	d.Client.ExecuteCmd(&Command{
 		Path:   "/url",
 		Method: http.MethodPost,
 		Data:   marshalData(map[string]string{"url": u}),
