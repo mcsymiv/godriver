@@ -28,27 +28,29 @@ func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 }
 
 func TestDriver(t *testing.T) {
-	d, tear := Driver()
+	d, tear := Driver(
+		capabilities.Port("4445"),
+	)
 	defer tear()
 
 	repo := "/repository/download/"
 	allure := ":id/allure-report.zip!/allure-report-test/index.html#suites"
 	config.LoadEnv("../config", ".env")
 	host := os.Getenv("DOWNLOAD_HOST")
-	testEnv := "dev01"
+	testEnv := "review01"
 
 	var rLinks []string
 	sNames := []string{
-		// os.Getenv("SUITE_NAME_1"),
-		os.Getenv("SUITE_NAME_2"),
-		os.Getenv("SUITE_NAME_3"),
-		os.Getenv("SUITE_NAME_4"),
-		// os.Getenv("SUITE_NAME_5"),
-		// os.Getenv("SUITE_NAME_6"),
-		os.Getenv("SUITE_NAME_7"),
-		os.Getenv("SUITE_NAME_8"),
-		os.Getenv("SUITE_NAME_9"),
-		// os.Getenv("SUITE_NAME_10"),
+		// os.Getenv("SUITE_NAME_1"), 		// smoke
+		os.Getenv("SUITE_NAME_2"), // regress
+		os.Getenv("SUITE_NAME_3"), // single
+		os.Getenv("SUITE_NAME_4"), // m
+		// os.Getenv("SUITE_NAME_5"), 		// ol
+		// os.Getenv("SUITE_NAME_6"), 		// hil
+		os.Getenv("SUITE_NAME_7"), // gm
+		os.Getenv("SUITE_NAME_8"), // business
+		os.Getenv("SUITE_NAME_9"), // visual
+		// os.Getenv("SUITE_NAME_10"), 		// iframe
 	}
 
 	d.Open(fmt.Sprintf("%s%s", host, "/login.html"))
@@ -75,23 +77,6 @@ func TestDriver(t *testing.T) {
 		d.Find("[data-tooltip='Download CSV']").Click()
 		time.Sleep(5 * time.Second)
 	}
-}
-
-func TestStep(t *testing.T) {
-	d, tear := Driver(
-		capabilities.Port("4445"),
-	)
-	defer tear()
-
-	config.LoadEnv("../config", ".env")
-
-	d.Open(os.Getenv("LOCAL_HOST"))
-	d.Find("//*[@id='btn-sign-in']").Key(driver.EnterKey)
-
-	d.FindText("Search").Key("\"QAAuto_Digital_Template_Asset_Output_Type\"").Key(driver.EnterKey)
-	d.Find("//*[@data-qa-id='mode-edit']").Click()
-
-	time.Sleep(4 * time.Second)
 }
 
 // TestV2, TestV3
