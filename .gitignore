@@ -1,5 +1,4 @@
 .vscode
 config/.env
 artifacts/*
-test/brandg_test.go
-test/steps.go
+test/*
