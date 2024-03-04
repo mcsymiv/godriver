@@ -1,61 +1,10 @@
 package driver
 
 import (
-	"fmt"
-	"log"
 	"net/http"
-	"time"
 
 	"github.com/mcsymiv/godriver/by"
 )
-
-type findStrategy struct {
-	Driver
-	timeout, delay time.Duration
-}
-
-// Execute
-// findStrategy impl
-// retries find command with delay until element is returned
-// or timeout reached, which takes a screenshot of the page
-func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
-	log.Printf("find strategy request: %s", req.URL.Path)
-	var res *http.Response
-	var err error
-
-	res, err = f.Client.HTTPClient.Do(req)
-
-	if res.StatusCode == http.StatusNotFound {
-		log.Printf("element not fount: %v", res.StatusCode)
-
-		start := time.Now()
-		end := start.Add(f.timeout * time.Second)
-
-		for {
-			log.Println("find retry")
-			time.Sleep(f.delay * time.Millisecond)
-			res, err = f.Client.HTTPClient.Do(req)
-			if err != nil {
-				return res, fmt.Errorf("error on find retry: %v", err)
-			}
-
-			if res.StatusCode == http.StatusOK {
-				log.Printf("element fount: %v", res.StatusCode)
-
-				return res, nil
-			}
-
-			if time.Now().After(end) {
-				f.Driver.Screenshot()
-				return res, fmt.Errorf("unable to find element with %v timeout: %v", f.timeout, err)
-			}
-		}
-	}
-
-	log.Printf("find response strategy status code: %v", res.StatusCode)
-
-	return res, err
-}
 
 // newFindCommand
 // returns default values for
@@ -70,7 +19,7 @@ func newFindCommand(by by.Selector, d *Driver) *Command {
 		}),
 		Strategies: []CommandExecutor{
 			&findStrategy{
-				Driver:  *d,
+				driver:  *d,
 				timeout: 20, // in 15 seconds time window performs up to 2 retries to find element
 				delay:   700,
 			},
@@ -102,7 +51,7 @@ func finds(by by.Selector, d *Driver) ([]*Element, error) {
 		}),
 		Strategies: []CommandExecutor{
 			&findStrategy{
-				Driver:  *d,
+				driver:  *d,
 				timeout: 15, // in 15 seconds time window performs up to 2 retries to find element
 				delay:   700,
 			},
@@ -123,4 +72,34 @@ func finds(by by.Selector, d *Driver) ([]*Element, error) {
 	}
 
 	return els, nil
+}
+
+func (e *Element) From(by by.Selector) *Element {
+	op := &Command{
+		Path:           "/element/%s/element",
+		PathFormatArgs: []any{e.Id},
+		Method:         http.MethodPost,
+		Data: marshalData(&JsonFindUsing{
+			Using: by.Using,
+			Value: by.Value,
+		}),
+		Strategies: []CommandExecutor{
+			&findStrategyV2{
+				el:    *e,
+				d:     *e.Driver,
+				t:     15, // in 15 seconds time window performs up to 2 retries to find element
+				delay: 700,
+			},
+		},
+	}
+
+	el := new(struct{ Value map[string]string })
+	e.Driver.Client.ExecuteCmd(op, el)
+	eId := elementID(el.Value)
+
+	return &Element{
+		Id:       eId,
+		Driver:   e.Driver,
+		Selector: by,
+	}
 }

@@ -53,16 +53,17 @@ func (d *Driver) FindX(selector string) *Element {
 	return el
 }
 
-func (d *Driver) FindXs(selector string) []*Element {
-	by := by.Selector{
-		Using: by.ByXPath,
+func (d *Driver) Finds(selector string) []*Element {
+	w3cBy := by.Selector{
 		Value: selector,
+		Using: by.DefineStrategy(selector),
 	}
 
-	el, err := finds(by, d)
+	el, err := finds(w3cBy, d)
 	if err != nil {
 		return nil
 	}
+
 	return el
 }
 

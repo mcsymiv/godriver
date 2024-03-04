@@ -12,6 +12,13 @@ func (d Driver) Open(u string) {
 	})
 }
 
+func (d *Driver) OpenInNewTab(u string) {
+	d.NewTab()
+	tNum := getTabs(d)
+	d.SwitchToTab(len(tNum) - 1)
+	d.Open(u)
+}
+
 func (d Driver) Refresh() {
 	d.Client.ExecuteCommand(&Command{
 		Path:   "/refresh",
