@@ -85,7 +85,7 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 			unmarshalResponses([]*buffResponse{buffRes}, displayRes)
 
 			if displayRes.Value {
-				// get NopCloser response with body
+				// set NopCloser response with body
 				buffRes.Response.Body = buffRes.bRead()
 				return buffRes.Response, nil
 			}
@@ -97,7 +97,7 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 		}
 	}
 
-	// get NopCloser response with body
+	// set NopCloser response with body
 	buffRes.Response.Body = buffRes.bRead()
 	return buffRes.Response, err
 }
@@ -105,9 +105,8 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 func isDisplayed(e *Element) (bool, error) {
 	op := newDisplayCommand(e)
 
-	buffRes := e.Client.ExecuteCommand(op)
 	d := new(struct{ Value bool })
-	unmarshalResponses(buffRes, d)
+	e.Client.ExecuteCmd(op, d)
 
 	return d.Value, nil
 }

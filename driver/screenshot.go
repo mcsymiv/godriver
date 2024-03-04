@@ -34,10 +34,8 @@ func newScreenShotCommand() *Command {
 func screenshot(d *Driver) error {
 	op := newScreenShotCommand()
 
-	buffRes := d.Client.ExecuteCommand(op)
-
 	data := new(struct{ Value string })
-	unmarshalResponse(buffRes[0].buff, data)
+	d.Client.ExecuteCmd(op, data)
 
 	decodedImage, err := base64.StdEncoding.DecodeString(data.Value)
 	if err != nil {
@@ -53,7 +51,7 @@ func screenshot(d *Driver) error {
 	// Create a new file for the output JPEG image
 	// TODO:	remove hardcoded artifact path
 	// 				upd randSeq, use meaninful screenshot name
-	outputFile, err := os.Create(fmt.Sprintf("../artifacts/%s_%s.jpg", randSeq(8), time.Now().Format("2006_01_02_15:04:05")))
+	outputFile, err := os.Create(fmt.Sprintf("../artifacts/screenshots/%s_%s.jpg", randSeq(8), time.Now().Format("2006_01_02_15:04:05")))
 	if err != nil {
 		return fmt.Errorf("error on create file: %v", err)
 	}

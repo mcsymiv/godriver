@@ -19,6 +19,7 @@ type AlwaysMatch struct {
 	AcceptInsecureCerts bool   `json:"acceptInsecureCerts"`
 	BrowserName         string `json:"browserName"`
 	Timeouts            `json:"timeouts,omitempty"`
+	ChromeOptions       `json:"goog:chromeOptions,omitempty"`
 	MozOptions          `json:"moz:firefoxOptions,omitempty"`
 	PageLoad            string `json:"pageLoadStrategy,omitempty"`
 }
@@ -26,6 +27,11 @@ type AlwaysMatch struct {
 type Timeouts struct {
 	Implicit float32 `json:"implicit,omitempty"`
 	Script   float32 `json:"script,omitempty"`
+}
+
+type ChromeOptions struct {
+	Binary string   `json:"binary,omitempty"`
+	Args   []string `json:"args,omitempty"`
 }
 
 type MozOptions struct {
@@ -59,9 +65,10 @@ func DefaultCapabilities() Capabilities {
 			AlwaysMatch{
 				AcceptInsecureCerts: true,
 				BrowserName:         "firefox",
-				// Timeouts: Timeouts{
-				// 	PageLoad: "normal",
-				// },
+				PageLoad:            "normal",
+				Timeouts: Timeouts{
+					Implicit: 10000,
+				},
 			},
 		},
 	}
@@ -73,15 +80,19 @@ func ImplicitWait(w float32) CapabilitiesFunc {
 	}
 }
 
+// PageLoadStrategy
+// https://html.spec.whatwg.org/#current-document-readiness
 func PageLoadStrategy(st string) CapabilitiesFunc {
 	return func(cap *Capabilities) {
 		cap.Capabilities.AlwaysMatch.PageLoad = st
 	}
 }
 
-func Firefox(moz *MozOptions) CapabilitiesFunc {
+func HeadLess() CapabilitiesFunc {
 	return func(cap *Capabilities) {
-		cap.Capabilities.AlwaysMatch.MozOptions = *moz
+		cap.Capabilities.AlwaysMatch.MozOptions = MozOptions{
+			Args: []string{"-headless"},
+		}
 	}
 }
 
@@ -91,6 +102,7 @@ func BrowserName(b string) CapabilitiesFunc {
 	}
 }
 
+// DriverSetupCapabilities
 func Port(p string) CapabilitiesFunc {
 	return func(caps *Capabilities) {
 		caps.DriverSetupCapabilities.Port = p
