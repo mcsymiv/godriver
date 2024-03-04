@@ -57,7 +57,7 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 
 type findStrategyV2 struct {
 	d        Driver
-	el       Element
+	prevEl   Element
 	t, delay time.Duration
 }
 
