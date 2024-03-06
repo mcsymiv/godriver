@@ -6,14 +6,11 @@ import (
 )
 
 func (d Driver) PageSource() {
-	op := &Command{
+	s := new(struct{ Value string })
+	d.Client.ExecuteCmd(&Command{
 		Path:   "/source",
 		Method: http.MethodGet,
-	}
-
-	bRes := d.Client.ExecuteCommand(op)
-	s := new(struct{ Value string })
-	unmarshalResponses(bRes, s)
+	}, s)
 
 	log.Println(string(s.Value))
 }

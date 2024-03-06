@@ -22,10 +22,10 @@ func newFrameCommand(el *Element) *Command {
 
 func (el *Element) SwitchFrame() {
 	op := newFrameCommand(el)
-	el.Client.ExecuteCommand(op)
+	el.Client.ExecuteCmd(op)
 }
 
 func (el *Element) SwitchFrameParent() {
 	op := newFrameCommand(nil)
-	el.Client.ExecuteCommand(op)
+	el.Client.ExecuteCmd(op)
 }

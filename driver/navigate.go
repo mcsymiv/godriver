@@ -20,7 +20,7 @@ func (d *Driver) OpenInNewTab(u string) {
 }
 
 func (d Driver) Refresh() {
-	d.Client.ExecuteCommand(&Command{
+	d.Client.ExecuteCmd(&Command{
 		Path:   "/refresh",
 		Method: http.MethodPost,
 		Data:   marshalData(&Empty{}),

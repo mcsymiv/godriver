@@ -124,7 +124,7 @@ func (c *Client) ExecuteCommand(cmd *Command) []*buffResponse {
 //     executes prepared command and strategies (if defined)
 //     when no strategy difened, executes client request
 //  2. unmarshals passed data struct
-func (c *Client) ExecuteCmd(cmd *Command, d ...any) {
+func (c *Client) ExecuteCmd(cmd *Command, d ...any) []*buffResponse {
 	req, err := newCommandRequest(c, cmd)
 	if err != nil {
 		log.Println("error on new command request")
@@ -135,7 +135,7 @@ func (c *Client) ExecuteCmd(cmd *Command, d ...any) {
 		res, err := NewStrategy(s).Exec(req)
 		if err != nil {
 			log.Printf("error on new strategy exec: %+v", err)
-			return
+			return nil
 		}
 
 		st.bufs[i] = newBuffResponse(res)
@@ -150,4 +150,6 @@ func (c *Client) ExecuteCmd(cmd *Command, d ...any) {
 			}
 		}
 	}
+
+	return st.bufs
 }

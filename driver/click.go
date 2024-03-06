@@ -14,8 +14,8 @@ func (cl clickStrategy) Execute(req *http.Request) (*http.Response, error) {
 	return cl.Client.Do(req)
 }
 
-func (el *Element) click() (*Element, error) {
-	op := &Command{
+func (el *Element) Click() *Element {
+	el.Client.ExecuteCmd(&Command{
 		Path:           "/element/%s/click",
 		PathFormatArgs: []any{el.Id},
 		Method:         http.MethodPost,
@@ -23,18 +23,7 @@ func (el *Element) click() (*Element, error) {
 		Strategies: []CommandExecutor{
 			&clickStrategy{},
 		},
-	}
+	})
 
-	el.Client.ExecuteCommand(op)
-
-	return el, nil
-}
-
-func (el *Element) Click() *Element {
-	e, err := el.click()
-	if err != nil {
-		return nil
-	}
-
-	return e
+	return el
 }
