@@ -101,3 +101,7 @@ func TestV3(t *testing.T) {
 	d.Open("https://google.com")
 	time.Sleep(9 * time.Second)
 }
+
+func TestTeamcity(t *testing.T) {
+	fmt.Println("integration worked")
+}
