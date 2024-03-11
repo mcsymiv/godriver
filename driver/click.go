@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 )
 
 type clickStrategy struct {
@@ -34,20 +33,10 @@ func (el *Element) ClickV2() *Element {
 
 	el.Driver.Script(
 		fmt.Sprintf(
-			`
-			function ev() {
-				document.querySelector("%s").addEventListener("click", function(e) { 
-					console.log("clicked");
-					return "any value";
-				});
-			}
-			return ev();
-			`,
+			`document.querySelector("%s").addEventListener("click",function(e){return "any value"})`,
 			el.Selector.Value,
 		),
 	)
-
-	time.Sleep(2 * time.Second)
 
 	el.Client.ExecuteCmd(&Command{
 		Path:           "/element/%s/click",
