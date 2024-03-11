@@ -64,9 +64,8 @@ func executeScriptSync(d Driver, script string, args ...interface{}) (interface{
 		}),
 	}
 
-	bRes := d.Client.ExecuteCommand(op)
 	rr := new(struct{ Value interface{} })
-	unmarshalResponses(bRes, rr)
+	d.Client.ExecuteCmd(op, rr)
 
 	return rr.Value, nil
 }

@@ -114,3 +114,14 @@ func Host(h string) CapabilitiesFunc {
 		caps.DriverSetupCapabilities.Host = h
 	}
 }
+
+func ChromeArgsOptions(opts ...string) CapabilitiesFunc {
+	var options []string
+	if len(opts) > 0 {
+		options = append(options, opts...)
+	}
+
+	return func(caps *Capabilities) {
+		caps.Capabilities.ChromeOptions.Args = options
+	}
+}
