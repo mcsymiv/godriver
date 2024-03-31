@@ -11,8 +11,8 @@ import (
 	"github.com/mcsymiv/godriver/capabilities"
 )
 
-var GeckoDriverPath string = "/Users/mcs/Documents/tools/geckodriver"
-var ChromeDriverPath string = "/Users/mcs/Documents/tools/chromedriver-mac-arm64/chromedriver"
+var GeckoDriverPath string = "geckodriver"
+var ChromeDriverPath string = ""
 
 type DriverStatus struct {
 	Message string `json:"message"`
