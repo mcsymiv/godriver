@@ -21,7 +21,7 @@ func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	}
 	return d, func() {
 		// teardown
-		// d.Quit()
+		d.Quit()
 		driver.OutFileLogs.Close()
 		d.Service().Process.Kill()
 	}
@@ -48,7 +48,7 @@ func TestDriver(t *testing.T) {
 		// os.Getenv("SUITE_NAME_5"), 		// ol
 		// os.Getenv("SUITE_NAME_6"), // hil
 		// os.Getenv("SUITE_NAME_7"), // gm
-		os.Getenv("SUITE_NAME_8"), // business
+		// os.Getenv("SUITE_NAME_8"), // business
 		// os.Getenv("SUITE_NAME_9"), // visual
 		// os.Getenv("SUITE_NAME_10"), 		// iframe
 	}
@@ -100,8 +100,4 @@ func TestV3(t *testing.T) {
 	time.Sleep(9 * time.Second)
 	d.Open("https://google.com")
 	time.Sleep(9 * time.Second)
-}
-
-func TestTeamcity(t *testing.T) {
-	fmt.Println("integration worked")
 }
