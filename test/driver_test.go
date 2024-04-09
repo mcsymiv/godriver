@@ -27,9 +27,30 @@ func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	}
 }
 
+func TestNewAccount(t *testing.T) {
+	d, tear := Driver(
+		capabilities.Port("4444"),
+		capabilities.HeadLess(),
+	)
+	defer tear()
+
+	config.LoadEnv("../config", ".env")
+
+	d.Open(os.Getenv("SUB_ENVIRONMENT"))
+	d.Find("//*[@id='okta-signin-username']").Key(os.Getenv("OKTA_LOGIN"))
+	d.Find("//*[@id='okta-signin-password']").Key(os.Getenv("OKTA_PASS")).Key(driver.EnterKey)
+	d.FindText("Add Account").Click()
+	d.FindText("Customer Name *").Click().Key("qa-135748")
+	d.FindText("System Name *").Click().Key("qa-135748")
+	d.FindText("Sub Domain *").Click().Key("qa-135748")
+	d.FindText("Create").Click()
+
+}
+
 func TestDriver(t *testing.T) {
 	d, tear := Driver(
-		capabilities.Port("4445"),
+		capabilities.Port("4444"),
+		capabilities.HeadLess(),
 	)
 	defer tear()
 
@@ -37,7 +58,7 @@ func TestDriver(t *testing.T) {
 	allure := ":id/allure-report.zip!/allure-report-test/index.html#suites"
 	config.LoadEnv("../config", ".env")
 	host := os.Getenv("DOWNLOAD_HOST")
-	testEnv := "dev01"
+	testEnv := "review01"
 
 	var rLinks []string
 	sNames := []string{
@@ -45,7 +66,7 @@ func TestDriver(t *testing.T) {
 		os.Getenv("SUITE_NAME_2"), // regress
 		os.Getenv("SUITE_NAME_3"), // single
 		os.Getenv("SUITE_NAME_4"), // m
-		// os.Getenv("SUITE_NAME_5"), 		// ol
+		// os.Getenv("SUITE_NAME_5"), // ol
 		// os.Getenv("SUITE_NAME_6"), // hil
 		// os.Getenv("SUITE_NAME_7"), // gm
 		// os.Getenv("SUITE_NAME_8"), // business
@@ -57,8 +78,8 @@ func TestDriver(t *testing.T) {
 	d.Find(".//a[text()='Log in using Azure Active Directory']").IsDisplayed().Click()
 	d.Find("[id='i0116']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
 	d.Find("[id='i0118']").Key(os.Getenv("DOWNLOAD_PASS"))
-	d.Find("//input[@value='Увійти']").IsDisplayed().Click()
-	d.Find("//input[@value='Так']").IsDisplayed().Click()
+	d.Find("//input[@value='Sign in']").IsDisplayed().Click()
+	d.Find("//input[@value='Yes']").IsDisplayed().Click()
 	d.Find("//span[text()='Projects']").IsDisplayed().Click()
 	d.Find("[id='search-projects']").IsDisplayed().Key(testEnv)
 
@@ -73,9 +94,9 @@ func TestDriver(t *testing.T) {
 
 	for _, rLink := range rLinks {
 		d.Open(rLink)
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 		d.Find("[data-tooltip='Download CSV']").Click()
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }
 
