@@ -14,6 +14,18 @@ import (
 	"github.com/mcsymiv/godriver/driver"
 )
 
+func loginOkta(d *driver.Driver) {
+	d.Find("//*[@id='okta-signin-username']").Key(os.Getenv("OKTA_LOGIN"))
+	d.Find("//*[@id='okta-signin-password']").Key(os.Getenv("OKTA_PASS")).Key(driver.EnterKey)
+}
+
+func ubuntuGeckoDriver() (*driver.Driver, func()) {
+	return Driver(
+		capabilities.Port("4444"),
+		capabilities.HeadLess(),
+	)
+}
+
 func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	d := driver.NewDriver(caps...)
 	if d == nil {
@@ -27,38 +39,57 @@ func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	}
 }
 
-func TestNewAccount(t *testing.T) {
-	d, tear := Driver(
-		capabilities.Port("4444"),
-		capabilities.HeadLess(),
-	)
+func TestDeleteAccount(t *testing.T) {
+	d, tear := ubuntuGeckoDriver()
 	defer tear()
 
 	config.LoadEnv("../config", ".env")
 
-	d.Open(os.Getenv("SUB_ENVIRONMENT"))
-	d.Find("//*[@id='okta-signin-username']").Key(os.Getenv("OKTA_LOGIN"))
-	d.Find("//*[@id='okta-signin-password']").Key(os.Getenv("OKTA_PASS")).Key(driver.EnterKey)
+	d.Open(os.Getenv("SUB_ENVIRONMENT_01"))
+	loginOkta(d)
+
+	d.Find("//*[contains(@class, 'pagination_pageSize')]").Click()
+	d.FindText("200").Click()
+
+	acc := "qa-dev01-135319"
+
+	d.Find(fmt.Sprintf("//*[text()='%s']/..//*[@data-qa-id='delete']", acc)).Click()
+	d.Find("//*[text()='Confirm Delete']/../..//input").Key(acc)
+	d.FindText("Yes").Click()
+}
+
+func TestNewAccount(t *testing.T) {
+	d, tear := ubuntuGeckoDriver()
+	defer tear()
+
+	config.LoadEnv("../config", ".env")
+
+	d.Open(os.Getenv("SUB_ENVIRONMENT_01"))
+	loginOkta(d)
+
+	acc := "qa-dev01-135319"
+
 	d.FindText("Add Account").Click()
-	d.FindText("Customer Name *").Click().Key("qa-135748")
-	d.FindText("System Name *").Click().Key("qa-135748")
-	d.FindText("Sub Domain *").Click().Key("qa-135748")
+	d.FindText("Customer Name *").Click().GetActive().Key(acc)
+	d.FindText("System Name *").Click().GetActive().Key(acc)
+	d.FindText("Sub Domain *").Click().GetActive().Key(acc)
+	// d.FindText("Built-in Authentication").Click()
+
+	d.FindText("SMB").Click()
+	d.FindText("Enterprise").Click()
 	d.FindText("Create").Click()
 
 }
 
 func TestDriver(t *testing.T) {
-	d, tear := Driver(
-		capabilities.Port("4444"),
-		capabilities.HeadLess(),
-	)
+	d, tear := ubuntuGeckoDriver()
 	defer tear()
 
 	repo := "/repository/download/"
 	allure := ":id/allure-report.zip!/allure-report-test/index.html#suites"
 	config.LoadEnv("../config", ".env")
 	host := os.Getenv("DOWNLOAD_HOST")
-	testEnv := "review01"
+	testEnv := "dev01"
 
 	var rLinks []string
 	sNames := []string{

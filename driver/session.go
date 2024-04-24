@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/mcsymiv/godriver/capabilities"
@@ -52,8 +51,6 @@ func newSession(caps *capabilities.Capabilities) (*Session, error) {
 		return nil, fmt.Errorf("erron on status unmarshal: %v", err)
 	}
 
-	log.Println(reply.Value)
-
 	return &Session{
 		Id:    reply.Value.Id,
 		Route: "/session",
@@ -68,5 +65,5 @@ func (d Driver) Quit() {
 		Method: http.MethodDelete,
 	}
 
-	d.Client.ExecuteCommand(q)
+	d.Client.ExecuteCmd(q)
 }
