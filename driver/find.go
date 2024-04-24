@@ -102,3 +102,38 @@ func (e *Element) From(by by.Selector) *Element {
 		Selector: by,
 	}
 }
+
+func (e *Element) Froms(by by.Selector) []*Element {
+	op := &Command{
+		Path:           "/element/%s/elements",
+		PathFormatArgs: []any{e.Id},
+		Method:         http.MethodPost,
+		Data: marshalData(&JsonFindUsing{
+			Using: by.Using,
+			Value: by.Value,
+		}),
+		Strategies: []CommandExecutor{
+			&findStrategy{
+				driver:  *e.Driver,
+				timeout: 20, // in 15 seconds time window performs up to 2 retries to find element
+				delay:   700,
+			},
+		},
+	}
+
+	el := new(struct{ Value []map[string]string })
+	e.Driver.Client.ExecuteCmd(op, el)
+	elementsIds := elementsID(el.Value)
+
+	var els []*Element
+
+	for _, id := range elementsIds {
+		els = append(els, &Element{
+			Id:     id,
+			Driver: e.Driver,
+		})
+	}
+
+	return els
+
+}
