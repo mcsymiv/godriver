@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"log"
 	"net/http"
 )
 
@@ -9,8 +8,10 @@ type clickStrategy struct {
 	http.Client
 }
 
+// click strategy
+// note: return default client click request as example
+// TODO: add strategy for ElementNotFound, ClickIntercepted etc
 func (cl clickStrategy) Execute(req *http.Request) (*http.Response, error) {
-	log.Printf("click on: %s", req.URL.Path)
 	return cl.Client.Do(req)
 }
 

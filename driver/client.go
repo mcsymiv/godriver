@@ -54,7 +54,7 @@ func (l logginRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 		return nil, fmt.Errorf("error on %v request: %v", r, err)
 	}
 
-	log.Printf("res status: %v", res.StatusCode)
+	log.Printf("Response: %v %v", r.URL.String(), res.StatusCode)
 	return res, nil
 }
 

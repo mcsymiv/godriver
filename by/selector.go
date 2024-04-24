@@ -29,9 +29,13 @@ func DefineStrategy(s string) string {
 
 // XPathTextStrategy
 // text/value based find strategy
-func XPathTextStrategy(value string) Selector {
+func xPathTextStrategy(value string) Selector {
 	return Selector{
 		Using: ByXPath,
 		Value: fmt.Sprintf("//*[text()='%[1]s'] | //*[@placeholder='%[1]s'] | //*[@value='%[1]s']", value),
 	}
+}
+
+func Text(value string) Selector {
+	return xPathTextStrategy(value)
 }

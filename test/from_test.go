@@ -32,10 +32,7 @@ func TestFrom(t *testing.T) {
 
 	d.Open("https://google.com")
 	nav := d.FindCss("[id='gb']")
-	g := nav.From(by.Selector{
-		Using: by.ByCssSelector,
-		Value: "[id='gbwa']",
-	})
+	g := nav.From(by.Text("Gmail"))
 
 	g.Click()
 	d.Screenshot()
