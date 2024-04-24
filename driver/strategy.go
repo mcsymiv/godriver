@@ -17,7 +17,6 @@ type findStrategy struct {
 // retries find command with delay until element is returned
 // or timeout reached, which takes a screenshot of the page
 func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
-	log.Printf("find strategy request: %s", req.URL.Path)
 	var res *http.Response
 	var err error
 
