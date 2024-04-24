@@ -22,7 +22,7 @@ func (d *Driver) Find(selector string) *Element {
 
 // FindText
 func (d *Driver) FindText(value string) *Element {
-	w3cBy := by.XPathTextStrategy(value)
+	w3cBy := by.Text(value)
 
 	el, err := find(w3cBy, d)
 	if err != nil {

@@ -49,13 +49,12 @@ type logginRoundTripper struct {
 // RountTrip
 // middleware logger for Client
 func (l logginRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
-	log.Printf("req: %s %s", r.Method, r.URL.Path)
 	res, err := l.next.RoundTrip(r)
 	if err != nil {
 		return nil, fmt.Errorf("error on %v request: %v", r, err)
 	}
 
-	log.Printf("res status: %v", res.StatusCode)
+	log.Printf("Response: %v %v", r.URL.String(), res.StatusCode)
 	return res, nil
 }
 
@@ -99,6 +98,8 @@ func (cl Client) Execute(req *http.Request) (*http.Response, error) {
 //     executes prepared command and strategies (if defined)
 //     when no strategy difened, executes client request
 //  2. returns response wrapper for multiple reads
+//
+// remove in favour of ExecuteCmd
 func (c *Client) ExecuteCommand(cmd *Command) []*buffResponse {
 	req, err := newCommandRequest(c, cmd)
 	if err != nil {

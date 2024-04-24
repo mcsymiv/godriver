@@ -84,11 +84,10 @@ func (e *Element) From(by by.Selector) *Element {
 			Value: by.Value,
 		}),
 		Strategies: []CommandExecutor{
-			&findStrategyV2{
-				prevEl: *e,
-				d:      *e.Driver,
-				t:      15, // in 15 seconds time window performs up to 2 retries to find element
-				delay:  700,
+			&findStrategy{
+				driver:  *e.Driver,
+				timeout: 20, // in 15 seconds time window performs up to 2 retries to find element
+				delay:   700,
 			},
 		},
 	}

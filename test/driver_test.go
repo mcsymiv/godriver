@@ -14,6 +14,18 @@ import (
 	"github.com/mcsymiv/godriver/driver"
 )
 
+func loginOkta(d *driver.Driver) {
+	d.Find("//*[@id='okta-signin-username']").Key(os.Getenv("OKTA_LOGIN"))
+	d.Find("//*[@id='okta-signin-password']").Key(os.Getenv("OKTA_PASS")).Key(driver.EnterKey)
+}
+
+func ubuntuGeckoDriver() (*driver.Driver, func()) {
+	return Driver(
+		capabilities.Port("4444"),
+		capabilities.HeadLess(),
+	)
+}
+
 func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	d := driver.NewDriver(caps...)
 	if d == nil {
@@ -27,10 +39,50 @@ func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	}
 }
 
+func TestDeleteAccount(t *testing.T) {
+	d, tear := ubuntuGeckoDriver()
+	defer tear()
+
+	config.LoadEnv("../config", ".env")
+
+	d.Open(os.Getenv("SUB_ENVIRONMENT_01"))
+	loginOkta(d)
+
+	d.Find("//*[contains(@class, 'pagination_pageSize')]").Click()
+	d.FindText("200").Click()
+
+	acc := "qa-dev01-135319"
+
+	d.Find(fmt.Sprintf("//*[text()='%s']/..//*[@data-qa-id='delete']", acc)).Click()
+	d.Find("//*[text()='Confirm Delete']/../..//input").Key(acc)
+	d.FindText("Yes").Click()
+}
+
+func TestNewAccount(t *testing.T) {
+	d, tear := ubuntuGeckoDriver()
+	defer tear()
+
+	config.LoadEnv("../config", ".env")
+
+	d.Open(os.Getenv("SUB_ENVIRONMENT_01"))
+	loginOkta(d)
+
+	acc := "qa-dev01-135319"
+
+	d.FindText("Add Account").Click()
+	d.FindText("Customer Name *").Click().GetActive().Key(acc)
+	d.FindText("System Name *").Click().GetActive().Key(acc)
+	d.FindText("Sub Domain *").Click().GetActive().Key(acc)
+	// d.FindText("Built-in Authentication").Click()
+
+	d.FindText("SMB").Click()
+	d.FindText("Enterprise").Click()
+	d.FindText("Create").Click()
+
+}
+
 func TestDriver(t *testing.T) {
-	d, tear := Driver(
-		capabilities.Port("4445"),
-	)
+	d, tear := ubuntuGeckoDriver()
 	defer tear()
 
 	repo := "/repository/download/"
@@ -45,7 +97,7 @@ func TestDriver(t *testing.T) {
 		os.Getenv("SUITE_NAME_2"), // regress
 		os.Getenv("SUITE_NAME_3"), // single
 		os.Getenv("SUITE_NAME_4"), // m
-		// os.Getenv("SUITE_NAME_5"), 		// ol
+		// os.Getenv("SUITE_NAME_5"), // ol
 		// os.Getenv("SUITE_NAME_6"), // hil
 		// os.Getenv("SUITE_NAME_7"), // gm
 		// os.Getenv("SUITE_NAME_8"), // business
@@ -57,8 +109,8 @@ func TestDriver(t *testing.T) {
 	d.Find(".//a[text()='Log in using Azure Active Directory']").IsDisplayed().Click()
 	d.Find("[id='i0116']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
 	d.Find("[id='i0118']").Key(os.Getenv("DOWNLOAD_PASS"))
-	d.Find("//input[@value='Увійти']").IsDisplayed().Click()
-	d.Find("//input[@value='Так']").IsDisplayed().Click()
+	d.Find("//input[@value='Sign in']").IsDisplayed().Click()
+	d.Find("//input[@value='Yes']").IsDisplayed().Click()
 	d.Find("//span[text()='Projects']").IsDisplayed().Click()
 	d.Find("[id='search-projects']").IsDisplayed().Key(testEnv)
 
@@ -73,9 +125,9 @@ func TestDriver(t *testing.T) {
 
 	for _, rLink := range rLinks {
 		d.Open(rLink)
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 		d.Find("[data-tooltip='Download CSV']").Click()
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }
 
