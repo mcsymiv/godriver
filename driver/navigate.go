@@ -35,6 +35,8 @@ func (d *Driver) NewTab() {
 	})
 }
 
+// SwitchToTab
+// Swiches context to N tab in browser, where 0 is first tab
 func (d *Driver) SwitchToTab(n int) {
 	h := getTabs(d)
 

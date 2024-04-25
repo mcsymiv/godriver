@@ -3,7 +3,6 @@ package test
 import (
 	// "fmt"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"testing"
@@ -24,19 +23,6 @@ func ubuntuGeckoDriver() (*driver.Driver, func()) {
 		capabilities.Port("4444"),
 		capabilities.HeadLess(),
 	)
-}
-
-func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
-	d := driver.NewDriver(caps...)
-	if d == nil {
-		log.Fatal("Unable to start driver")
-	}
-	return d, func() {
-		// teardown
-		d.Quit()
-		driver.OutFileLogs.Close()
-		d.Service().Process.Kill()
-	}
 }
 
 func TestDeleteAccount(t *testing.T) {

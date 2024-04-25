@@ -5,14 +5,14 @@ import (
 )
 
 type clickStrategy struct {
-	d Driver
+	http.Client
 }
 
 // click strategy
 // note: return default client click request as example
 // TODO: add strategy for ElementNotFound, ClickIntercepted etc
 func (cl clickStrategy) Execute(req *http.Request) (*http.Response, error) {
-	return cl.d.Client.HTTPClient.Do(req)
+	return cl.Client.Do(req)
 }
 
 func (el *Element) Click() *Element {
@@ -22,7 +22,7 @@ func (el *Element) Click() *Element {
 		Method:         http.MethodPost,
 		Data:           marshalData(&Empty{}),
 		Strategies: []CommandExecutor{
-			&clickStrategy{},
+			&clickStrategy{}, // if no initialized Driver provided, http.Client wrap can be used in strategy
 		},
 	})
 

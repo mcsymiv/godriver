@@ -10,7 +10,6 @@ import (
 
 // RestClient represents a REST client configuration.
 type Client struct {
-	Session            *Session
 	BaseURL            string
 	HTTPClient         *http.Client
 	RequestReaderLimit int64
@@ -18,53 +17,13 @@ type Client struct {
 	DefaultExecuteStrategy CommandExecutor
 }
 
-// retryRoundTripper
-// http.RoundTrip client middleware
-// TODO: add retry logic
-// most of request retries will be handled in strategies
-// serves as a general retry between client and webdriver
-type retryRoundTripper struct {
-	next       http.RoundTripper
-	maxRetries int
-	delay      time.Duration
-}
-
-// RoundTrip
-// middleware for retries
-// TODO: add global retry logic
-func (rr retryRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
-	res, err := rr.next.RoundTrip(r)
-	if err != nil {
-		return res, err
-	}
-
-	return res, nil
-}
-
-// loggingRoundTripper
-type logginRoundTripper struct {
-	next http.RoundTripper
-}
-
-// RountTrip
-// middleware logger for Client
-func (l logginRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
-	res, err := l.next.RoundTrip(r)
-	if err != nil {
-		return nil, fmt.Errorf("error on %v request: %v", r, err)
-	}
-
-	log.Printf("Response: %v %v", r.URL.String(), res.StatusCode)
-	return res, nil
-}
-
-// newClient
-// NewRestClient creates a new instance of the REST client with default settings.
-func newClient(baseURL string, session *Session) *Client {
+// newClientV2
+// new client init without Session param
+func newClient(baseURL string) *Client {
 	return &Client{
 		BaseURL:            baseURL,
-		Session:            session,
 		RequestReaderLimit: 2048,
+
 		HTTPClient: &http.Client{
 			Transport: &retryRoundTripper{
 				maxRetries: 3,
@@ -80,7 +39,8 @@ func newClient(baseURL string, session *Session) *Client {
 // Execute
 // default command executor impl
 // performs http.Client request
-// serves as command executor middleware for all commands
+// serves as command executor middleware for all default commands,
+// i.e. withoud defined CommandExecutor stategy
 func (cl Client) Execute(req *http.Request) (*http.Response, error) {
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
@@ -93,53 +53,33 @@ func (cl Client) Execute(req *http.Request) (*http.Response, error) {
 	return res, nil
 }
 
-// ExecuteCommand
-//  1. general purpose client receiver
-//     executes prepared command and strategies (if defined)
-//     when no strategy difened, executes client request
-//  2. returns response wrapper for multiple reads
-//
-// remove in favour of ExecuteCmd
-func (c *Client) ExecuteCommand(cmd *Command) []*buffResponse {
-	req, err := newCommandRequest(c, cmd)
-	if err != nil {
-		return nil
-	}
-
-	st := newExecutorContext(c, cmd)
-	for i, s := range st.cmds {
-		res, err := NewStrategy(s).Exec(req)
-		if err != nil {
-			log.Println("error on strategy exec:", err)
-			return nil
-		}
-
-		st.bufs[i] = newBuffResponse(res)
-	}
-
-	return st.bufs
-}
-
 // ExecuteCmd
 //  1. general purpose client receiver
 //     executes prepared command and strategies (if defined)
 //     when no strategy difened, executes client request
 //  2. unmarshals passed data struct
-func (c *Client) ExecuteCmd(cmd *Command, d ...any) []*buffResponse {
+//
+// TODO: refactor to internal use, i.e. executeCmd
+func (c *Client) ExecuteCmd(cmd *Command, d ...any) ([]*buffResponse, error) {
 	req, err := newCommandRequest(c, cmd)
 	if err != nil {
-		log.Println("error on new command request")
+		return nil, fmt.Errorf("error on new command request: %v", err)
 	}
 
 	st := newExecutorContext(c, cmd)
 	for i, s := range st.cmds {
+
+		// executes request inside defined CommandExecutor strategy
+		// if none provided, performs http.Request with Client's DefaultExecuteStrategy
 		res, err := NewStrategy(s).Exec(req)
 		if err != nil {
-			log.Printf("error on new strategy exec: %+v", err)
-			return nil
+			return nil, fmt.Errorf("error on new strategy exec: %+v", err)
 		}
 
-		st.bufs[i] = newBuffResponse(res)
+		st.bufs[i], err = newBuffResponse(res)
+		if err != nil {
+			return nil, fmt.Errorf("error on new buffered response: %v", err)
+		}
 	}
 
 	if len(st.bufs) > 0 && len(d) > 0 {
@@ -147,10 +87,10 @@ func (c *Client) ExecuteCmd(cmd *Command, d ...any) []*buffResponse {
 			err := json.Unmarshal(res.buff, d[i])
 
 			if err != nil {
-				log.Printf("error on unmarshal %d response: %v", i, err)
+				return nil, fmt.Errorf("error on unmarshal %d response: %v", i, err)
 			}
 		}
 	}
 
-	return st.bufs
+	return st.bufs, nil
 }

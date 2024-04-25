@@ -56,13 +56,16 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 	// newClient
 	// utilizes RoundTripper interface to wrap requests to the driver
 	c := newClient(
-		fmt.Sprintf("%s://%s:%s", caps.DriverSetupCapabilities.Protocol, caps.DriverSetupCapabilities.Host, caps.DriverSetupCapabilities.Port),
-		s,
+		fmt.Sprintf("%s://%s:%s/session/%s",
+			caps.DriverSetupCapabilities.Protocol,
+			caps.DriverSetupCapabilities.Host,
+			caps.DriverSetupCapabilities.Port,
+			s.Id,
+		),
 	)
 
 	return &Driver{
 		Client:       c,
-		Session:      s,
 		ServiceCmd:   cmd,
 		Capabilities: &caps,
 	}
