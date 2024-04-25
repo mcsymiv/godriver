@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 )
 
@@ -84,11 +83,10 @@ func newExecutorContext(c *Client, cmd *Command) *executorContext {
 // newBuffResponse
 // reusable response for multiple reads
 // TODO: think about passing in interface{} of returned struct
-func newBuffResponse(response *http.Response) *buffResponse {
+func newBuffResponse(response *http.Response) (*buffResponse, error) {
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		log.Println("error on buf write")
-		return nil
+		return nil, fmt.Errorf("error on read all body response: %v", err)
 	}
 
 	buffRes := &buffResponse{
@@ -100,23 +98,24 @@ func newBuffResponse(response *http.Response) *buffResponse {
 		},
 	}
 
-	return buffRes
+	return buffRes, nil
 }
 
 // newCommandRequest
+// updated version without Session
 func newCommandRequest(c *Client, cmd *Command) (*http.Request, error) {
 	var cPath string = cmd.Path
 	if len(cmd.PathFormatArgs) != 0 {
 		cPath = fmt.Sprintf(cmd.Path, cmd.PathFormatArgs...)
 	}
 
-	url := fmt.Sprintf("%s%s/%s%s", c.BaseURL, c.Session.Route, c.Session.Id, cPath)
+	url := fmt.Sprintf("%s%s", c.BaseURL, cPath)
 
 	rr := io.LimitReader(ReusableReader(bytes.NewReader(cmd.Data)), c.RequestReaderLimit)
 	reqBody := io.NopCloser(rr)
 	req, err := http.NewRequest(cmd.Method, url, reqBody)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error on new request: %v", err)
 	}
 
 	return req, nil

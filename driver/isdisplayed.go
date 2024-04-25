@@ -65,23 +65,31 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 
 	// get response buffer
 	// reads response body
-	buffRes = newBuffResponse(res)
+	buffRes, err = newBuffResponse(res)
+	if err != nil {
+		return nil, fmt.Errorf("error on isDisplay strategy, new buffered response: %v", err)
+	}
+
 	unmarshalResponses([]*buffResponse{buffRes}, displayRes)
 
 	// start waiter check
 	if !displayRes.Value {
 		start := time.Now()
 		end := start.Add(dis.timeout * time.Second)
+		log.Printf("element is not visible: %v", displayRes)
 
 		for {
-			log.Println("element is not visible")
 			time.Sleep(dis.delay * time.Millisecond)
+
 			res, err = dis.Client.HTTPClient.Do(req)
 			if err != nil {
 				return nil, fmt.Errorf("error")
 			}
 
-			buffRes = newBuffResponse(res)
+			buffRes, err = newBuffResponse(res)
+			if err != nil {
+				return nil, fmt.Errorf("error on isDisplay value retry, new buffered response: %v", err)
+			}
 			unmarshalResponses([]*buffResponse{buffRes}, displayRes)
 
 			if displayRes.Value {

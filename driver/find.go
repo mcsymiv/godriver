@@ -11,19 +11,15 @@ import (
 // /element command to execute
 func newFindCommand(by by.Selector, d *Driver) *Command {
 	return &Command{
+
 		Path:   "/element",
 		Method: http.MethodPost,
 		Data: marshalData(&JsonFindUsing{
 			Using: by.Using,
 			Value: by.Value,
 		}),
-		Strategies: []CommandExecutor{
-			&findStrategy{
-				driver:  *d,
-				timeout: 20, // in 15 seconds time window performs up to 2 retries to find element
-				delay:   700,
-			},
-		},
+
+		Strategies: []CommandExecutor{newFindStrategy(d)},
 	}
 }
 
@@ -49,13 +45,7 @@ func finds(by by.Selector, d *Driver) ([]*Element, error) {
 			Using: by.Using,
 			Value: by.Value,
 		}),
-		Strategies: []CommandExecutor{
-			&findStrategy{
-				driver:  *d,
-				timeout: 15, // in 15 seconds time window performs up to 2 retries to find element
-				delay:   700,
-			},
-		},
+		Strategies: []CommandExecutor{newFindStrategy(d)},
 	}
 
 	el := new(struct{ Value []map[string]string })
@@ -72,68 +62,4 @@ func finds(by by.Selector, d *Driver) ([]*Element, error) {
 	}
 
 	return els, nil
-}
-
-func (e *Element) From(by by.Selector) *Element {
-	op := &Command{
-		Path:           "/element/%s/element",
-		PathFormatArgs: []any{e.Id},
-		Method:         http.MethodPost,
-		Data: marshalData(&JsonFindUsing{
-			Using: by.Using,
-			Value: by.Value,
-		}),
-		Strategies: []CommandExecutor{
-			&findStrategy{
-				driver:  *e.Driver,
-				timeout: 20, // in 15 seconds time window performs up to 2 retries to find element
-				delay:   700,
-			},
-		},
-	}
-
-	el := new(struct{ Value map[string]string })
-	e.Driver.Client.ExecuteCmd(op, el)
-	eId := elementID(el.Value)
-
-	return &Element{
-		Id:       eId,
-		Driver:   e.Driver,
-		Selector: by,
-	}
-}
-
-func (e *Element) Froms(by by.Selector) []*Element {
-	op := &Command{
-		Path:           "/element/%s/elements",
-		PathFormatArgs: []any{e.Id},
-		Method:         http.MethodPost,
-		Data: marshalData(&JsonFindUsing{
-			Using: by.Using,
-			Value: by.Value,
-		}),
-		Strategies: []CommandExecutor{
-			&findStrategy{
-				driver:  *e.Driver,
-				timeout: 20, // in 15 seconds time window performs up to 2 retries to find element
-				delay:   700,
-			},
-		},
-	}
-
-	el := new(struct{ Value []map[string]string })
-	e.Driver.Client.ExecuteCmd(op, el)
-	elementsIds := elementsID(el.Value)
-
-	var els []*Element
-
-	for _, id := range elementsIds {
-		els = append(els, &Element{
-			Id:     id,
-			Driver: e.Driver,
-		})
-	}
-
-	return els
-
 }

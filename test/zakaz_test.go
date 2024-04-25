@@ -3,7 +3,6 @@ package test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/mcsymiv/godriver/by"
 	"github.com/mcsymiv/godriver/capabilities"
@@ -11,7 +10,6 @@ import (
 
 func TestZakaz(t *testing.T) {
 	d, tear := Driver(
-		capabilities.HeadLess(),
 		capabilities.Port("4444"),
 	)
 
@@ -20,21 +18,23 @@ func TestZakaz(t *testing.T) {
 	d.Open("https://zakaz.ua/en/")
 	d.FindCss("[data-marker='NOVUS']").Click()
 	d.SwitchToTab(1)
+	d.Find("[data-marker='Close popup']").Click()
+
 	d.FindText("Grocery").Click()
-	time.Sleep(2 * time.Second)
-	els := d.Find("[id='PageWrapBody_desktopMode']").Froms(by.Selector{
-		Using: by.ByCssSelector,
-		Value: "[data-testid='product_tile_inner']",
-	})
+	d.FindX("//h1[text()='Grocery']").IsDisplayed()
+
+	els := d.Find("[id='PageWrapBody_desktopMode']").Froms(by.Css("[data-testid='product_tile_inner']"))
+
+	var products [][]string
 
 	for _, el := range els {
-		oldP := el.From(by.Selector{
-			Using: by.ByCssSelector,
-			Value: "[data-marker='Price']",
-		})
+		var product []string = []string{}
 
-		fmt.Println(oldP.Text())
+		pn := el.From(by.Css("[data-testid='product_tile_title']"))
+
+		product = append(product, pn.Text())
+		products = append(products, product)
 	}
 
-	d.Screenshot()
+	fmt.Println(products)
 }

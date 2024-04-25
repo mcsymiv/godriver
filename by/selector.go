@@ -39,3 +39,10 @@ func xPathTextStrategy(value string) Selector {
 func Text(value string) Selector {
 	return xPathTextStrategy(value)
 }
+
+func Css(value string) Selector {
+	return Selector{
+		Using: ByCssSelector,
+		Value: value,
+	}
+}

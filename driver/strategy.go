@@ -8,8 +8,16 @@ import (
 )
 
 type findStrategy struct {
-	driver         Driver
+	driver         *Driver
 	timeout, delay time.Duration
+}
+
+func newFindStrategy(d *Driver) *findStrategy {
+	return &findStrategy{
+		driver:  d,
+		timeout: 20, // in 20 seconds time window performs up to 2 retries to find element
+		delay:   700,
+	}
 }
 
 // Execute
@@ -20,6 +28,7 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 	var res *http.Response
 	var err error
 
+	fmt.Println("inside find stratedy")
 	res, err = f.driver.Client.HTTPClient.Do(req)
 
 	if res.StatusCode == http.StatusNotFound {
