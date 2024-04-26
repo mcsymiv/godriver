@@ -2,14 +2,16 @@ package driver
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 )
 
-type WrapCommand func(CommandHandler) CommandHandler
+// type WrapCommand func(CommandHandler) CommandHandler
 
-type CommandHandler func(*http.Request) (*http.Response, error)
+// type CommandHandler func(*http.Request) (*http.Response, error)
 
 // Route represents a specific API route and its handler function.
 type Command struct {
@@ -26,6 +28,7 @@ type Command struct {
 // strategy to remove duplicates in execute Command/Request
 type CommandExecutor interface {
 	Execute(req *http.Request) (*http.Response, error)
+	Exec(r *buffRequest) (*buffResponse, error)
 }
 
 // Context
@@ -43,7 +46,10 @@ func (c *CommandStrategy) Set(cmd CommandExecutor) {
 	c.CommandExecutor = cmd
 }
 
+// Exec
+// bottleneck for all req/res commands
 func (c CommandStrategy) Exec(req *http.Request) (*http.Response, error) {
+	log.Println("in exec")
 	return c.CommandExecutor.Execute(req)
 }
 
@@ -51,6 +57,11 @@ type buffResponse struct {
 	*http.Response
 	buff  []byte
 	bRead func() io.ReadCloser // callback when response with body required
+}
+
+type buffRequest struct {
+	*http.Request
+	bRead func() io.ReadCloser
 }
 
 type executorContext struct {
@@ -119,4 +130,46 @@ func newCommandRequest(c *Client, cmd *Command) (*http.Request, error) {
 	}
 
 	return req, nil
+}
+
+// ExecuteCmd
+//  1. general purpose client receiver
+//     executes prepared command and strategies (if defined)
+//     when no strategy difened, executes client request
+//  2. unmarshals passed data struct
+//
+// TODO: refactor to internal use, i.e. executeCmd
+func (c *Client) ExecuteCmd(cmd *Command, d ...any) ([]*buffResponse, error) {
+	req, err := newCommandRequest(c, cmd)
+	if err != nil {
+		return nil, fmt.Errorf("error on new command request: %v", err)
+	}
+
+	st := newExecutorContext(c, cmd)
+	for i, s := range st.cmds {
+
+		// executes request inside defined CommandExecutor strategy
+		// if none provided, performs http.Request with Client's DefaultExecuteStrategy
+		res, err := NewStrategy(s).Exec(req)
+		if err != nil {
+			return nil, fmt.Errorf("error on new strategy exec: %+v", err)
+		}
+
+		st.bufs[i], err = newBuffResponse(res)
+		if err != nil {
+			return nil, fmt.Errorf("error on new buffered response: %v", err)
+		}
+	}
+
+	if len(st.bufs) > 0 && len(d) > 0 {
+		for i, res := range st.bufs {
+			err := json.Unmarshal(res.buff, d[i])
+
+			if err != nil {
+				return nil, fmt.Errorf("error on unmarshal %d response: %v", i, err)
+			}
+		}
+	}
+
+	return st.bufs, nil
 }

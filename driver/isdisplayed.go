@@ -1,10 +1,8 @@
 package driver
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"time"
 )
 
 // IsDisplayed
@@ -21,12 +19,6 @@ func (e *Element) IsDisplayed() *Element {
 	}
 
 	return e
-}
-
-type displayStrategy struct {
-	findReq *http.Request
-	*Driver
-	timeout, delay time.Duration
 }
 
 // newDisplayCommand
@@ -49,65 +41,6 @@ func newDisplayCommand(e *Element) *Command {
 			},
 		},
 	}
-}
-
-func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
-	var displayRes = new(struct{ Value bool })
-	var buffRes *buffResponse
-	var res *http.Response
-	var err error
-
-	// perform isDisplayed check
-	res, err = dis.Client.HTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	// get response buffer
-	// reads response body
-	buffRes, err = newBuffResponse(res)
-	if err != nil {
-		return nil, fmt.Errorf("error on isDisplay strategy, new buffered response: %v", err)
-	}
-
-	unmarshalResponses([]*buffResponse{buffRes}, displayRes)
-
-	// start waiter check
-	if !displayRes.Value {
-		start := time.Now()
-		end := start.Add(dis.timeout * time.Second)
-		log.Printf("element is not visible: %v", displayRes)
-
-		for {
-			time.Sleep(dis.delay * time.Millisecond)
-
-			res, err = dis.Client.HTTPClient.Do(req)
-			if err != nil {
-				return nil, fmt.Errorf("error")
-			}
-
-			buffRes, err = newBuffResponse(res)
-			if err != nil {
-				return nil, fmt.Errorf("error on isDisplay value retry, new buffered response: %v", err)
-			}
-			unmarshalResponses([]*buffResponse{buffRes}, displayRes)
-
-			if displayRes.Value {
-				// set NopCloser response with body
-				buffRes.Response.Body = buffRes.bRead()
-				return buffRes.Response, nil
-			}
-
-			if time.Now().After(end) {
-				dis.Screenshot()
-				return buffRes.Response, fmt.Errorf("error on element display timeout: %v", err)
-			}
-		}
-	}
-
-	// set NopCloser response with body
-	buffRes.Response.Body = buffRes.bRead()
-	return buffRes.Response, err
 }
 
 func isDisplayed(e *Element) (bool, error) {
