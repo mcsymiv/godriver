@@ -10,11 +10,6 @@ func (el *Element) Click() *Element {
 		PathFormatArgs: []any{el.Id},
 		Method:         http.MethodPost,
 		Data:           marshalData(&Empty{}),
-		Strategies: []CommandExecutor{
-			&clickStrategy{
-				Client: &http.Client{},
-			}, // if no initialized Driver provided, http.Client wrap can be used in strategy
-		},
 	})
 
 	return el
