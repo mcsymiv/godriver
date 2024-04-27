@@ -47,7 +47,7 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 		for {
 			log.Println("find retry")
 			time.Sleep(f.delay * time.Millisecond)
-			// res, err = f.Client.Do(req)
+
 			res, err = f.driver.Client.HTTPClient.Do(req)
 			if err != nil {
 				err = fmt.Errorf("error on find retry: %v", err)
