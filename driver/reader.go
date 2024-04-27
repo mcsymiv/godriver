@@ -3,6 +3,7 @@ package driver
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 )
@@ -54,14 +55,19 @@ func marshalData(body interface{}) []byte {
 	return b
 }
 
-func unmarshalResponses(buffRes []*buffResponse, any ...interface{}) {
+func unmarshalResponses(buffRes []*buffResponse, any ...interface{}) error {
+	var err error
+
 	if len(buffRes) > 0 {
 		for i, res := range buffRes {
-			err := json.Unmarshal(res.buff, &any[i])
+			err = json.Unmarshal(res.buff, &any[i])
 
 			if err != nil {
-				log.Printf("error on unmarshal %d response: %v", i, err)
+				err = fmt.Errorf("error on unmarshal %d response: %v", i, err)
+				break
 			}
 		}
 	}
+
+	return err
 }

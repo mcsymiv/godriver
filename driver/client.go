@@ -41,7 +41,7 @@ func newClient(baseURL string) *Client {
 // performs http.Client request
 // serves as command executor middleware for all default commands,
 // i.e. withoud defined CommandExecutor stategy
-func (cl Client) Execute(req *http.Request) (*http.Response, error) {
+func (cl *Client) Execute(req *http.Request) (*http.Response, error) {
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
 	res, err := cl.HTTPClient.Do(req)
@@ -51,6 +51,10 @@ func (cl Client) Execute(req *http.Request) (*http.Response, error) {
 	}
 
 	return res, nil
+}
+
+func (cl *Client) Exec(r *buffRequest) (*buffResponse, error) {
+	return nil, nil
 }
 
 // ExecuteCmd
@@ -71,10 +75,11 @@ func (c *Client) ExecuteCmd(cmd *Command, d ...any) ([]*buffResponse, error) {
 
 		// executes request inside defined CommandExecutor strategy
 		// if none provided, performs http.Request with Client's DefaultExecuteStrategy
-		res, err := NewStrategy(s).Exec(req)
+		res, err := s.Execute(req)
 		if err != nil {
 			return nil, fmt.Errorf("error on new strategy exec: %+v", err)
 		}
+		defer res.Body.Close()
 
 		st.bufs[i], err = newBuffResponse(res)
 		if err != nil {
