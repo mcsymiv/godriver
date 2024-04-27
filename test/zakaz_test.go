@@ -15,5 +15,5 @@ func TestZakaz(t *testing.T) {
 	defer tear()
 
 	d.Open("https://zakaz.ua/en/")
-	d.FindCss("[data-marker='NOVUS']").Click()
+	d.FindCss("[data-marker='NOVUS']").IsDisplayed().Click()
 }

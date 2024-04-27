@@ -40,7 +40,6 @@ func newClient(baseURL string) *Client {
 // serves as command executor middleware for all default commands,
 // i.e. withoud defined CommandExecutor stategy
 func (cl *Client) Execute(req *http.Request) (*http.Response, error) {
-	log.Println("in execute client")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
 	res, err := cl.HTTPClient.Do(req)

@@ -27,22 +27,12 @@ type Command struct {
 // strategy to remove duplicates in execute Command/Request
 type CommandExecutor interface {
 	Execute(req *http.Request) (*http.Response, error)
-	Exec(r *buffRequest) (*buffResponse, error)
+	Exec(r *buffRequest) (*buffResponse, error) // TODO: Exec wrapper around req/res
 }
 
 // Context
 type CommandStrategy struct {
 	CommandExecutor
-}
-
-func NewStrategy(cmd CommandExecutor) *CommandStrategy {
-	return &CommandStrategy{
-		CommandExecutor: cmd,
-	}
-}
-
-func (c *CommandStrategy) Set(cmd CommandExecutor) {
-	c.CommandExecutor = cmd
 }
 
 type buffResponse struct {
@@ -66,21 +56,17 @@ type executorContext struct {
 // or from passed in command strategies
 // allocates space for buffered command response
 func newExecutorContext(c *Client, cmd *Command) *executorContext {
-	var st []CommandExecutor
-	var buffRes []*buffResponse
-
-	if len(cmd.Strategies) == 0 {
-		st = []CommandExecutor{c}
-		buffRes = make([]*buffResponse, 1)
-	} else {
-		st = cmd.Strategies
-		buffRes = make([]*buffResponse, len(cmd.Strategies))
+	var executorCtx *executorContext = &executorContext{
+		cmds: []CommandExecutor{c},
+		bufs: make([]*buffResponse, 1),
 	}
 
-	return &executorContext{
-		cmds: st,
-		bufs: buffRes,
+	if len(cmd.Strategies) > 0 {
+		executorCtx.cmds = cmd.Strategies
+		executorCtx.bufs = make([]*buffResponse, len(cmd.Strategies))
 	}
+
+	return executorCtx
 }
 
 // newBuffResponse
@@ -141,10 +127,11 @@ func (c *Client) ExecuteCmd(cmd *Command, d ...any) ([]*buffResponse, error) {
 
 		// executes request inside defined CommandExecutor strategy
 		// if none provided, performs http.Request with Client's DefaultExecuteStrategy
-		res, err := NewStrategy(s).Execute(req)
+		res, err := s.Execute(req)
 		if err != nil {
 			return nil, fmt.Errorf("error on new strategy exec: %+v", err)
 		}
+		defer res.Body.Close()
 
 		st.bufs[i], err = newBuffResponse(res)
 		if err != nil {

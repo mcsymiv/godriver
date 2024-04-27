@@ -11,7 +11,9 @@ func (el *Element) Click() *Element {
 		Method:         http.MethodPost,
 		Data:           marshalData(&Empty{}),
 		Strategies: []CommandExecutor{
-			&clickStrategy{}, // if no initialized Driver provided, http.Client wrap can be used in strategy
+			&clickStrategy{
+				Client: &http.Client{},
+			}, // if no initialized Driver provided, http.Client wrap can be used in strategy
 		},
 	})
 
