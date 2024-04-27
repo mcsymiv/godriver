@@ -10,11 +10,14 @@ import (
 type findStrategy struct {
 	driver *Driver
 	*http.Client
-	timeout, delay time.Duration
+
+	timeout time.Duration
+	delay   time.Duration
 }
 
 func newFindStrategy(d *Driver) *findStrategy {
 	return &findStrategy{
+		Client:  &http.Client{},
 		driver:  d,
 		timeout: 20, // in 20 seconds time window performs up to 2 retries to find element
 		delay:   700,
@@ -44,20 +47,21 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 		for {
 			log.Println("find retry")
 			time.Sleep(f.delay * time.Millisecond)
+			// res, err = f.Client.Do(req)
 			res, err = f.driver.Client.HTTPClient.Do(req)
 			if err != nil {
-				return res, fmt.Errorf("error on find retry: %v", err)
+				err = fmt.Errorf("error on find retry: %v", err)
+				break
 			}
 
 			if res.StatusCode == http.StatusOK {
-				log.Printf("element fount: %v", res.StatusCode)
-
-				return res, nil
+				break
 			}
 
 			if time.Now().After(end) {
 				f.driver.Screenshot()
-				return res, fmt.Errorf("unable to find element with %v timeout: %v", f.timeout, err)
+				err = fmt.Errorf("unable to find element with %v timeout: %v", f.timeout, err)
+				break
 			}
 		}
 	}
@@ -109,7 +113,10 @@ func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 			err = fmt.Errorf("error on isDisplay value retry, new buffered response: %v", err)
 			break
 		}
-		unmarshalResponses([]*buffResponse{buffRes}, displayRes)
+		err = unmarshalResponses([]*buffResponse{buffRes}, displayRes)
+		if err != nil {
+			break
+		}
 
 		if displayRes.Value {
 			break
