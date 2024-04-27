@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 )
 
@@ -44,13 +43,6 @@ func NewStrategy(cmd CommandExecutor) *CommandStrategy {
 
 func (c *CommandStrategy) Set(cmd CommandExecutor) {
 	c.CommandExecutor = cmd
-}
-
-// Exec
-// bottleneck for all req/res commands
-func (c CommandStrategy) Exec(req *http.Request) (*http.Response, error) {
-	log.Println("in exec")
-	return c.CommandExecutor.Execute(req)
 }
 
 type buffResponse struct {
@@ -93,7 +85,6 @@ func newExecutorContext(c *Client, cmd *Command) *executorContext {
 
 // newBuffResponse
 // reusable response for multiple reads
-// TODO: think about passing in interface{} of returned struct
 func newBuffResponse(response *http.Response) (*buffResponse, error) {
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -150,7 +141,7 @@ func (c *Client) ExecuteCmd(cmd *Command, d ...any) ([]*buffResponse, error) {
 
 		// executes request inside defined CommandExecutor strategy
 		// if none provided, performs http.Request with Client's DefaultExecuteStrategy
-		res, err := NewStrategy(s).Exec(req)
+		res, err := NewStrategy(s).Execute(req)
 		if err != nil {
 			return nil, fmt.Errorf("error on new strategy exec: %+v", err)
 		}

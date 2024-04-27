@@ -1,8 +1,6 @@
 package driver
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -57,4 +55,3 @@ func (cl *Client) Execute(req *http.Request) (*http.Response, error) {
 func (cl *Client) Exec(r *buffRequest) (*buffResponse, error) {
 	return nil, nil
 }
-
