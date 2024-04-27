@@ -10,13 +10,14 @@ import (
 
 func TestZakaz(t *testing.T) {
 	d, tear := Driver(
+		capabilities.HeadLess(),
 		capabilities.Port("4444"),
 	)
 
 	defer tear()
 
 	d.Open("https://zakaz.ua/en/")
-	d.FindCss("[data-marker='NOVUS']").Click()
+	d.FindCss("[data-marker='NOVUS']").IsDisplayed().Click()
 	d.SwitchToTab(1)
 	d.Find("[data-marker='Close popup']").Click()
 

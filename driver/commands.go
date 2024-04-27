@@ -7,9 +7,9 @@ import (
 	"net/http"
 )
 
-type WrapCommand func(CommandHandler) CommandHandler
+// type WrapCommand func(CommandHandler) CommandHandler
 
-type CommandHandler func(*http.Request) (*http.Response, error)
+// type CommandHandler func(*http.Request) (*http.Response, error)
 
 // Route represents a specific API route and its handler function.
 type Command struct {
@@ -26,6 +26,7 @@ type Command struct {
 // strategy to remove duplicates in execute Command/Request
 type CommandExecutor interface {
 	Execute(req *http.Request) (*http.Response, error)
+	Exec(r *buffRequest) (*buffResponse, error) // TODO: Exec wrapper around req/res
 }
 
 // Context
@@ -33,24 +34,15 @@ type CommandStrategy struct {
 	CommandExecutor
 }
 
-func NewStrategy(cmd CommandExecutor) *CommandStrategy {
-	return &CommandStrategy{
-		CommandExecutor: cmd,
-	}
-}
-
-func (c *CommandStrategy) Set(cmd CommandExecutor) {
-	c.CommandExecutor = cmd
-}
-
-func (c CommandStrategy) Exec(req *http.Request) (*http.Response, error) {
-	return c.CommandExecutor.Execute(req)
-}
-
 type buffResponse struct {
 	*http.Response
 	buff  []byte
 	bRead func() io.ReadCloser // callback when response with body required
+}
+
+type buffRequest struct {
+	*http.Request
+	bRead func() io.ReadCloser
 }
 
 type executorContext struct {
@@ -63,26 +55,21 @@ type executorContext struct {
 // or from passed in command strategies
 // allocates space for buffered command response
 func newExecutorContext(c *Client, cmd *Command) *executorContext {
-	var st []CommandExecutor
-	var buffRes []*buffResponse
-
-	if len(cmd.Strategies) == 0 {
-		st = []CommandExecutor{c}
-		buffRes = make([]*buffResponse, 1)
-	} else {
-		st = cmd.Strategies
-		buffRes = make([]*buffResponse, len(cmd.Strategies))
+	var executorCtx *executorContext = &executorContext{
+		cmds: []CommandExecutor{c},
+		bufs: make([]*buffResponse, 1),
 	}
 
-	return &executorContext{
-		cmds: st,
-		bufs: buffRes,
+	if len(cmd.Strategies) > 0 {
+		executorCtx.cmds = cmd.Strategies
+		executorCtx.bufs = make([]*buffResponse, len(cmd.Strategies))
 	}
+
+	return executorCtx
 }
 
 // newBuffResponse
 // reusable response for multiple reads
-// TODO: think about passing in interface{} of returned struct
 func newBuffResponse(response *http.Response) (*buffResponse, error) {
 	body, err := io.ReadAll(response.Body)
 	if err != nil {

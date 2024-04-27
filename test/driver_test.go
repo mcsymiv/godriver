@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mcsymiv/godriver/by"
 	"github.com/mcsymiv/godriver/capabilities"
 	"github.com/mcsymiv/godriver/config"
 	"github.com/mcsymiv/godriver/driver"
@@ -18,15 +19,8 @@ func loginOkta(d *driver.Driver) {
 	d.Find("//*[@id='okta-signin-password']").Key(os.Getenv("OKTA_PASS")).Key(driver.EnterKey)
 }
 
-func ubuntuGeckoDriver() (*driver.Driver, func()) {
-	return Driver(
-		capabilities.Port("4444"),
-		capabilities.HeadLess(),
-	)
-}
-
 func TestDeleteAccount(t *testing.T) {
-	d, tear := ubuntuGeckoDriver()
+	d, tear := Driver()
 	defer tear()
 
 	config.LoadEnv("../config", ".env")
@@ -45,7 +39,7 @@ func TestDeleteAccount(t *testing.T) {
 }
 
 func TestNewAccount(t *testing.T) {
-	d, tear := ubuntuGeckoDriver()
+	d, tear := Driver()
 	defer tear()
 
 	config.LoadEnv("../config", ".env")
@@ -68,7 +62,7 @@ func TestNewAccount(t *testing.T) {
 }
 
 func TestDriver(t *testing.T) {
-	d, tear := ubuntuGeckoDriver()
+	d, tear := Driver()
 	defer tear()
 
 	repo := "/repository/download/"
@@ -95,13 +89,15 @@ func TestDriver(t *testing.T) {
 	d.Find(".//a[text()='Log in using Azure Active Directory']").IsDisplayed().Click()
 	d.Find("[id='i0116']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
 	d.Find("[id='i0118']").Key(os.Getenv("DOWNLOAD_PASS"))
-	d.Find("//input[@value='Sign in']").IsDisplayed().Click()
-	d.Find("//input[@value='Yes']").IsDisplayed().Click()
-	d.Find("//span[text()='Projects']").IsDisplayed().Click()
+	d.Find("//input[@value='Увійти']").IsDisplayed().Click()
+	// d.Find("//input[@value='Так']").IsDisplayed().Click()
+	d.FindText("Так").IsDisplayed().Click()
+	d.FindText("Projects").IsDisplayed().Click()
 	d.Find("[id='search-projects']").IsDisplayed().Key(testEnv)
 
 	for _, sName := range sNames {
-		d.Find(fmt.Sprintf("//aside//span[contains(text(),'%s')]", sName)).IsDisplayed().Click()
+		// d.Find(fmt.Sprintf("//aside//span[contains(text(),'%s')]", sName)).IsDisplayed().Click()
+		d.Find("//*[@data-test='sidebar']").From(by.Text(sName)).IsDisplayed().Click()
 
 		buildLinkRaw := d.Find("(//*[@data-grid-root='true']//*[@data-test='ring-link'])[1]").IsDisplayed().Attribute("href")
 		buildLink := strings.Join(strings.Split(buildLinkRaw, "/")[2:], "/")
