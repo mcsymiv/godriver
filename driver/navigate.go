@@ -1,11 +1,10 @@
 package driver
 
 import (
-	"fmt"
 	"net/http"
 )
 
-func (d *Driver) Url(u string) error {
+func (d *Driver) Url(u string) *Driver {
 	_, err := d.Client.ExecuteCmd(&Command{
 		Path:   "/url",
 		Method: http.MethodPost,
@@ -13,10 +12,10 @@ func (d *Driver) Url(u string) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error on Url: %v", err)
+		return nil
 	}
 
-	return nil
+	return d
 }
 
 func (d Driver) Open(u string) {
@@ -62,12 +61,33 @@ func (d *Driver) SwitchToTab(n int) {
 	})
 }
 
+func (d *Driver) Tab(n int) *Driver {
+	h := getTabs(d)
+
+	_, err := d.Client.ExecuteCmd(&Command{
+		Path:   "/window",
+		Method: http.MethodPost,
+		Data:   marshalData(map[string]string{"handle": h[n]}),
+	})
+
+	if err != nil {
+		return nil
+	}
+
+	return d
+}
+
 func getTabs(d *Driver) []string {
 	h := new(struct{ Value []string })
-	d.Client.ExecuteCmd(&Command{
+
+	_, err := d.Client.ExecuteCmd(&Command{
 		Path:   "/window/handles",
 		Method: http.MethodGet,
 	}, h)
+
+	if err != nil {
+		return nil
+	}
 
 	return h.Value
 }

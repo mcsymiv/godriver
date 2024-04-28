@@ -43,10 +43,7 @@ func from(by by.Selector, e *Element) (*Element, error) {
 // From
 // Finds Element from receiver Element
 func (e *Element) From(s string) *Element {
-	by := by.Selector{
-		Value: s,
-		Using: by.DefineStrategy(s),
-	}
+	by := by.Strategy(s)
 
 	el, err := from(by, e)
 	if err != nil {

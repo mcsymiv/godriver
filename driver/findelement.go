@@ -4,6 +4,18 @@ import (
 	"github.com/mcsymiv/godriver/by"
 )
 
+// F
+func (d *Driver) F(selector string) *Element {
+	w3cBy := by.Strategy(selector)
+
+	el, err := find(w3cBy, d)
+	if err != nil {
+		return nil
+	}
+
+	return el
+}
+
 // Find
 func (d *Driver) Find(selector string) *Element {
 	w3cBy := by.Selector{

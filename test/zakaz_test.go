@@ -6,26 +6,7 @@ import (
 
 	"github.com/mcsymiv/godriver/by"
 	"github.com/mcsymiv/godriver/capabilities"
-	"github.com/mcsymiv/godriver/driver"
 )
-
-type Test struct {
-	*testing.T
-	*driver.Driver
-}
-
-func (ts *Test) url(s string, arg string) {
-	ts.T.Run(s, func(t *testing.T) {
-		ts.Driver.Open(arg)
-	})
-}
-
-func (ts *Test) click(s string, arg string) {
-	ts.T.Run(s, func(t *testing.T) {
-		el := ts.Driver.Find(arg)
-		el.Click()
-	})
-}
 
 func TestZakaz(t *testing.T) {
 	d, tear := Driver(
@@ -34,19 +15,14 @@ func TestZakaz(t *testing.T) {
 	)
 	defer tear()
 
-	test := &Test{t, d}
-
-	test.url("open url", "https://zakaz.ua/en/")
-	test.click("novus banner", "[data-marker='NOVUS']")
-
 	t.Run("zakaz", func(t *testing.T) {
-		d.SwitchToTab(1)
-		d.Find("[data-marker='Close popup']").Click()
+		d.Url("https://zakaz.ua/en/")
+		d.F("[data-marker='NOVUS']").Cl()
+		d.Tab(1).F("[data-marker='Close popup']").Cl()
+		d.F("Grocery").Cl()
+		d.F("//h1[text()='Grocery']").Is()
 
-		d.FindText("Grocery").Click()
-		d.Find("//h1[text()='Grocery']").IsDisplayed()
-
-		els := d.Find("[id='PageWrapBody_desktopMode']").Froms(by.Css("[data-testid='product_tile_inner']"))
+		els := d.F("[id='PageWrapBody_desktopMode']").Froms(by.Css("[data-testid='product_tile_inner']"))
 
 		var products [][]string
 
