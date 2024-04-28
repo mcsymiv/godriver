@@ -42,8 +42,24 @@ func from(by by.Selector, e *Element) (*Element, error) {
 
 // From
 // Finds Element from receiver Element
-func (e *Element) From(by by.Selector) *Element {
+func (e *Element) From(s string) *Element {
+	by := by.Selector{
+		Value: s,
+		Using: by.DefineStrategy(s),
+	}
+
 	el, err := from(by, e)
+	if err != nil {
+		return nil
+	}
+
+	return el
+}
+
+// FromText
+// Finds Element from receiver Element by.Text
+func (e *Element) FromText(txt string) *Element {
+	el, err := from(by.Text(txt), e)
 	if err != nil {
 		return nil
 	}

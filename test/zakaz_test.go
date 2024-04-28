@@ -6,36 +6,60 @@ import (
 
 	"github.com/mcsymiv/godriver/by"
 	"github.com/mcsymiv/godriver/capabilities"
+	"github.com/mcsymiv/godriver/driver"
 )
+
+type Test struct {
+	*testing.T
+	*driver.Driver
+}
+
+func (ts *Test) url(s string, arg string) {
+	ts.T.Run(s, func(t *testing.T) {
+		ts.Driver.Open(arg)
+	})
+}
+
+func (ts *Test) click(s string, arg string) {
+	ts.T.Run(s, func(t *testing.T) {
+		el := ts.Driver.Find(arg)
+		el.Click()
+	})
+}
 
 func TestZakaz(t *testing.T) {
 	d, tear := Driver(
 		capabilities.HeadLess(),
 		capabilities.Port("4444"),
 	)
-
 	defer tear()
 
-	d.Open("https://zakaz.ua/en/")
-	d.FindCss("[data-marker='NOVUS']").IsDisplayed().Click()
-	d.SwitchToTab(1)
-	d.Find("[data-marker='Close popup']").Click()
+	test := &Test{t, d}
 
-	d.FindText("Grocery").Click()
-	d.FindX("//h1[text()='Grocery']").IsDisplayed()
+	test.url("open url", "https://zakaz.ua/en/")
+	test.click("novus banner", "[data-marker='NOVUS']")
 
-	els := d.Find("[id='PageWrapBody_desktopMode']").Froms(by.Css("[data-testid='product_tile_inner']"))
+	t.Run("zakaz", func(t *testing.T) {
+		d.SwitchToTab(1)
+		d.Find("[data-marker='Close popup']").Click()
 
-	var products [][]string
+		d.FindText("Grocery").Click()
+		d.Find("//h1[text()='Grocery']").IsDisplayed()
 
-	for _, el := range els {
-		var product []string = []string{}
+		els := d.Find("[id='PageWrapBody_desktopMode']").Froms(by.Css("[data-testid='product_tile_inner']"))
 
-		pn := el.From(by.Css("[data-testid='product_tile_title']"))
+		var products [][]string
 
-		product = append(product, pn.Text())
-		products = append(products, product)
-	}
+		for _, el := range els {
+			var product []string = []string{}
 
-	fmt.Println(products)
+			pn := el.From("[data-testid='product_tile_title']")
+
+			product = append(product, pn.Text())
+			products = append(products, product)
+		}
+
+		fmt.Println(products)
+	})
+
 }

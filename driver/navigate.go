@@ -1,8 +1,23 @@
 package driver
 
 import (
+	"fmt"
 	"net/http"
 )
+
+func (d *Driver) Url(u string) error {
+	_, err := d.Client.ExecuteCmd(&Command{
+		Path:   "/url",
+		Method: http.MethodPost,
+		Data:   marshalData(map[string]string{"url": u}),
+	})
+
+	if err != nil {
+		return fmt.Errorf("error on Url: %v", err)
+	}
+
+	return nil
+}
 
 func (d Driver) Open(u string) {
 	d.Client.ExecuteCmd(&Command{
