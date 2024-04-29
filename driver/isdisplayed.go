@@ -1,7 +1,7 @@
 package driver
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 )
 
@@ -9,12 +9,24 @@ import (
 func (e *Element) IsDisplayed() *Element {
 	dis, err := isDisplayed(e)
 	if err != nil {
-		log.Println("error on displayed")
 		return nil
 	}
 
 	if !dis {
-		log.Println("element not visible")
+		return nil
+	}
+
+	return e
+}
+
+// Is("displayed")
+func (e *Element) Is() *Element {
+	dis, err := isDisplayed(e)
+	if err != nil {
+		return nil
+	}
+
+	if !dis {
 		return nil
 	}
 
@@ -47,7 +59,10 @@ func isDisplayed(e *Element) (bool, error) {
 	op := newDisplayCommand(e)
 
 	d := new(struct{ Value bool })
-	e.Client.ExecuteCmd(op, d)
+	_, err := e.Client.ExecuteCmd(op, d)
+	if err != nil {
+		return false, fmt.Errorf("error on display: %v", err)
+	}
 
 	return d.Value, nil
 }

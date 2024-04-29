@@ -27,6 +27,40 @@ func DefineStrategy(s string) string {
 	return ByCssSelector
 }
 
+func checkSubstrings(str string, subs ...string) (bool, int) {
+	matches := 0
+	isCompleteMatch := true
+
+	for _, sub := range subs {
+		if strings.Contains(str, sub) {
+			matches += 1
+		} else {
+			isCompleteMatch = false
+		}
+	}
+
+	return isCompleteMatch, matches
+}
+
+func Strategy(value string) Selector {
+	if strings.Contains(value, "/") {
+		return Selector{
+			Value: value,
+			Using: ByXPath,
+		}
+	}
+
+	// if ok, m := checkSubstrings(value, ".", "#", "[", "]"); ok || m > 0 {
+	if strings.Contains(value, "[") {
+		return Selector{
+			Value: value,
+			Using: ByCssSelector,
+		}
+	}
+
+	return xPathTextStrategy(value)
+}
+
 // XPathTextStrategy
 // text/value based find strategy
 func xPathTextStrategy(value string) Selector {
