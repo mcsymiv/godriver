@@ -17,9 +17,9 @@ func TestZakaz(t *testing.T) {
 
 	t.Run("zakaz", func(t *testing.T) {
 		d.Url("https://zakaz.ua/en/")
-		d.F("[data-marker='NOVUS']").Cl()
-		d.Tab(1).F("[data-marker='Close popup']").Cl()
-		d.F("Grocery").Cl()
+		d.F("[data-marker='NOVUS']").Click()
+		d.Tab(1).F("[data-marker='Clickose popup']").Click()
+		d.F("Grocery").Click()
 		d.F("//h1[text()='Grocery']").Is()
 
 		els := d.F("[id='PageWrapBody_desktopMode']").Froms(by.Css("[data-testid='product_tile_inner']"))

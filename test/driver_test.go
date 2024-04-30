@@ -26,14 +26,14 @@ func TestDeleteAccount(t *testing.T) {
 	d.Url(os.Getenv("SUB_ENVIRONMENT_01"))
 	loginOkta(d)
 
-	d.F("//*[contains(@class, 'pagination_pageSize')]").Cl()
+	d.F("//*[contains(@class, 'pagination_pageSize')]").Click()
 	d.F("200").Click()
 
 	acc := "qa-dev01-135319"
 
-	d.F(fmt.Sprintf("//*[text()='%s']/..//*[@data-qa-id='delete']", acc)).Cl()
+	d.F(fmt.Sprintf("//*[text()='%s']/..//*[@data-qa-id='delete']", acc)).Click()
 	d.F("//*[text()='Confirm Delete']/../..//input").Key(acc)
-	d.F("Yes").Cl()
+	d.F("Yes").Click()
 }
 
 func TestNewAccount(t *testing.T) {
@@ -47,15 +47,15 @@ func TestNewAccount(t *testing.T) {
 
 	acc := "qa-dev01-135319"
 
-	d.F("Add Account").Cl()
-	d.F("Customer Name *").Cl().Active().Key(acc)
-	d.F("System Name *").Cl().Active().Key(acc)
-	d.F("Sub Domain *").Cl().Active().Key(acc)
-	// d.FindText("Built-in Authentication").Click()
+	d.F("Add Account").Click()
+	d.F("Customer Name *").Click().Active().Key(acc)
+	d.F("System Name *").Click().Active().Key(acc)
+	d.F("Sub Domain *").Click().Active().Key(acc)
+	// d.FindText("Built-in Authentication").Clickick()
 
-	d.F("SMB").Cl()
-	d.F("Enterprise").Cl()
-	d.F("Create").Cl()
+	d.F("SMB").Click()
+	d.F("Enterprise").Click()
+	d.F("Create").Click()
 }
 
 func TestDriver(t *testing.T) {
@@ -83,18 +83,18 @@ func TestDriver(t *testing.T) {
 	}
 
 	d.Url(fmt.Sprintf("%s%s", host, "/login.html"))
-	d.F("Log in using Azure Active Directory").Is().Cl()
+	d.F("Log in using Azure Active Directory").Is().Click()
 	d.F("[id='i0116']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
 	d.F("[id='i0118']").Key(os.Getenv("DOWNLOAD_PASS"))
-	d.F("//input[@value='Увійти']").Is().Cl()
-	// d.Find("//input[@value='Так']").IsDisplayed().Cl()
-	d.F("Так").Is().Cl()
-	d.F("Projects").Is().Cl()
+	d.F("//input[@value='Увійти']").Is().Click()
+	// d.Find("//input[@value='Так']").IsDisplayed().Click()
+	d.F("Так").Is().Click()
+	d.F("Projects").Is().Click()
 	d.F("[id='search-projects']").Is().Key(testEnv)
 
 	for _, sName := range sNames {
-		// d.Find(fmt.Sprintf("//aside//span[contains(text(),'%s')]", sName)).IsDisplayed().Click()
-		d.F("//*[@data-test='sidebar']").From(sName).Is().Cl()
+		// d.Find(fmt.Sprintf("//aside//span[contains(text(),'%s')]", sName)).IsDisplayed().Clickick()
+		d.F("//*[@data-test='sidebar']").From(sName).Is().Click()
 
 		buildLinkRaw := d.F("(//*[@data-grid-root='true']//*[@data-test='ring-link'])[1]").Is().Attr("href")
 		buildLink := strings.Join(strings.Split(buildLinkRaw, "/")[2:], "/")
@@ -105,7 +105,7 @@ func TestDriver(t *testing.T) {
 	for _, rLink := range rLinks {
 		d.Url(rLink)
 		time.Sleep(10 * time.Second)
-		d.F("[data-tooltip='Download CSV']").Cl()
+		d.F("[data-tooltip='Download CSV']").Click()
 		time.Sleep(10 * time.Second)
 	}
 }
