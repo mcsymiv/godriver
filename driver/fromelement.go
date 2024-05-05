@@ -53,17 +53,6 @@ func (e *Element) From(s string) *Element {
 	return el
 }
 
-// FromText
-// Finds Element from receiver Element by.Text
-func (e *Element) FromText(txt string) *Element {
-	el, err := from(by.Text(txt), e)
-	if err != nil {
-		return nil
-	}
-
-	return el
-}
-
 func (e *Element) Froms(by by.Selector) []*Element {
 	op := &Command{
 		Path:           fromElementsPath,

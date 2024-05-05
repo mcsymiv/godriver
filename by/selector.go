@@ -43,7 +43,7 @@ func checkSubstrings(str string, subs ...string) (bool, int) {
 }
 
 func Strategy(value string) Selector {
-	if strings.Contains(value, "/") {
+	if value[0] == '/' || strings.Contains(value, "/") {
 		return Selector{
 			Value: value,
 			Using: ByXPath,
@@ -51,7 +51,7 @@ func Strategy(value string) Selector {
 	}
 
 	// if ok, m := checkSubstrings(value, ".", "#", "[", "]"); ok || m > 0 {
-	if strings.Contains(value, "[") {
+	if value[0] == '[' || strings.Contains(value, "[") {
 		return Selector{
 			Value: value,
 			Using: ByCssSelector,
