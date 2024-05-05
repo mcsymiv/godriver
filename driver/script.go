@@ -10,6 +10,7 @@ import (
 )
 
 func (d Driver) ExecuteScript(fName string, args ...string) interface{} {
+	// replace to format package call
 	f := config.FindFile("../js", fName)
 
 	// only one arg will be applied
