@@ -8,13 +8,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mcsymiv/godriver/capabilities"
 	"github.com/mcsymiv/godriver/config"
 	"github.com/mcsymiv/godriver/driver"
+	"github.com/xlzd/gotp"
 )
 
 func loginOkta(d *driver.Driver) {
 	d.F("//*[@id='okta-signin-username']").Key(os.Getenv("OKTA_LOGIN"))
 	d.F("//*[@id='okta-signin-password']").Key(os.Getenv("OKTA_PASS")).Key(driver.EnterKey)
+	totp := gotp.NewDefaultTOTP(os.Getenv("OKTA_TOTP"))
+	d.F("//*[@id='input59']").Key(totp.Now()).Key(driver.EnterKey)
 }
 
 func TestDeleteAccount(t *testing.T) {
@@ -37,15 +41,17 @@ func TestDeleteAccount(t *testing.T) {
 }
 
 func TestNewAccount(t *testing.T) {
-	d, tear := Driver()
+	d, tear := Driver(
+		capabilities.HeadLess(),
+	)
 	defer tear()
 
 	config.LoadEnv("../config", ".env")
 
-	d.Url(os.Getenv("SUB_ENVIRONMENT_01"))
+	d.Url(os.Getenv("SUB_ENVIRONMENT"))
 	loginOkta(d)
 
-	acc := "qa-dev01-135319"
+	acc := "qa-dev-yellow2-136117"
 
 	d.F("Add Account").Click()
 	d.F("Customer Name *").Click().Active().Key(acc)
@@ -86,9 +92,8 @@ func TestDriver(t *testing.T) {
 	d.F("Log in using Azure Active Directory").Is().Click()
 	d.F("[id='i0116']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
 	d.F("[id='i0118']").Key(os.Getenv("DOWNLOAD_PASS"))
-	d.F("//input[@value='Увійти']").Is().Click()
-	// d.Find("//input[@value='Так']").IsDisplayed().Click()
-	d.F("Так").Is().Click()
+	d.F("Sign in").Is().Click()
+	d.F("Yes").Is().Click()
 	d.F("Projects").Is().Click()
 	d.F("[id='search-projects']").Is().Key(testEnv)
 
