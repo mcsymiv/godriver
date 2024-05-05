@@ -1,10 +1,20 @@
 package driver
 
 import (
-	"log"
-
 	"github.com/mcsymiv/godriver/by"
 )
+
+// F
+func (d *Driver) F(selector string) *Element {
+	w3cBy := by.Strategy(selector)
+
+	el, err := find(w3cBy, d)
+	if err != nil {
+		return nil
+	}
+
+	return el
+}
 
 // Find
 func (d *Driver) Find(selector string) *Element {
@@ -40,19 +50,6 @@ func (d *Driver) FindElement(by by.Selector) *Element {
 	return el
 }
 
-func (d *Driver) FindX(selector string) *Element {
-	by := by.Selector{
-		Using: by.ByXPath,
-		Value: selector,
-	}
-
-	el, err := find(by, d)
-	if err != nil {
-		return nil
-	}
-	return el
-}
-
 func (d *Driver) Finds(selector string) []*Element {
 	w3cBy := by.Selector{
 		Value: selector,
@@ -64,19 +61,5 @@ func (d *Driver) Finds(selector string) []*Element {
 		return nil
 	}
 
-	return el
-}
-
-func (d *Driver) FindCss(selector string) *Element {
-	by := by.Selector{
-		Using: by.ByCssSelector,
-		Value: selector,
-	}
-
-	el, err := find(by, d)
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
 	return el
 }

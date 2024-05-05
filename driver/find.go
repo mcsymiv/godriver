@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/mcsymiv/godriver/by"
@@ -10,8 +11,8 @@ import (
 // returns default values for
 // /element command to execute
 func newFindCommand(by by.Selector, d *Driver) *Command {
-	return &Command{
 
+	return &Command{
 		Path:   "/element",
 		Method: http.MethodPost,
 		Data: marshalData(&JsonFindUsing{
@@ -23,17 +24,21 @@ func newFindCommand(by by.Selector, d *Driver) *Command {
 	}
 }
 
-func find(by by.Selector, d *Driver) (*Element, error) {
-	op := newFindCommand(by, d)
+func find(b by.Selector, d *Driver) (*Element, error) {
+	op := newFindCommand(b, d)
 
 	el := new(struct{ Value map[string]string })
-	d.Client.ExecuteCmd(op, el)
+	_, err := d.Client.ExecuteCmd(op, el)
+	if err != nil {
+		return nil, fmt.Errorf("error on find element by %+v\n error: %v", b, err)
+	}
+
 	eId := elementID(el.Value)
 
 	return &Element{
 		Id:       eId,
 		Driver:   d,
-		Selector: by,
+		Selector: b,
 	}, nil
 }
 

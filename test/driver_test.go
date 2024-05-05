@@ -8,15 +8,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mcsymiv/godriver/by"
 	"github.com/mcsymiv/godriver/capabilities"
 	"github.com/mcsymiv/godriver/config"
 	"github.com/mcsymiv/godriver/driver"
+	"github.com/xlzd/gotp"
 )
 
 func loginOkta(d *driver.Driver) {
-	d.Find("//*[@id='okta-signin-username']").Key(os.Getenv("OKTA_LOGIN"))
-	d.Find("//*[@id='okta-signin-password']").Key(os.Getenv("OKTA_PASS")).Key(driver.EnterKey)
+	d.F("//*[@id='okta-signin-username']").Key(os.Getenv("OKTA_LOGIN"))
+	d.F("//*[@id='okta-signin-password']").Key(os.Getenv("OKTA_PASS")).Key(driver.EnterKey)
+	totp := gotp.NewDefaultTOTP(os.Getenv("OKTA_TOTP"))
+	d.F("//*[@id='input59']").Key(totp.Now()).Key(driver.EnterKey)
 }
 
 func TestDeleteAccount(t *testing.T) {
@@ -25,40 +27,41 @@ func TestDeleteAccount(t *testing.T) {
 
 	config.LoadEnv("../config", ".env")
 
-	d.Open(os.Getenv("SUB_ENVIRONMENT_01"))
+	d.Url(os.Getenv("SUB_ENVIRONMENT_01"))
 	loginOkta(d)
 
-	d.Find("//*[contains(@class, 'pagination_pageSize')]").Click()
-	d.FindText("200").Click()
+	d.F("//*[contains(@class, 'pagination_pageSize')]").Click()
+	d.F("200").Click()
 
 	acc := "qa-dev01-135319"
 
-	d.Find(fmt.Sprintf("//*[text()='%s']/..//*[@data-qa-id='delete']", acc)).Click()
-	d.Find("//*[text()='Confirm Delete']/../..//input").Key(acc)
-	d.FindText("Yes").Click()
+	d.F(fmt.Sprintf("//*[text()='%s']/..//*[@data-qa-id='delete']", acc)).Click()
+	d.F("//*[text()='Confirm Delete']/../..//input").Key(acc)
+	d.F("Yes").Click()
 }
 
 func TestNewAccount(t *testing.T) {
-	d, tear := Driver()
+	d, tear := Driver(
+		capabilities.HeadLess(),
+	)
 	defer tear()
 
 	config.LoadEnv("../config", ".env")
 
-	d.Open(os.Getenv("SUB_ENVIRONMENT_01"))
+	d.Url(os.Getenv("SUB_ENVIRONMENT"))
 	loginOkta(d)
 
-	acc := "qa-dev01-135319"
+	acc := "qa-dev-yellow2-136117"
 
-	d.FindText("Add Account").Click()
-	d.FindText("Customer Name *").Click().GetActive().Key(acc)
-	d.FindText("System Name *").Click().GetActive().Key(acc)
-	d.FindText("Sub Domain *").Click().GetActive().Key(acc)
-	// d.FindText("Built-in Authentication").Click()
+	d.F("Add Account").Click()
+	d.F("Customer Name *").Click().Active().Key(acc)
+	d.F("System Name *").Click().Active().Key(acc)
+	d.F("Sub Domain *").Click().Active().Key(acc)
+	// d.FindText("Built-in Authentication").Clickick()
 
-	d.FindText("SMB").Click()
-	d.FindText("Enterprise").Click()
-	d.FindText("Create").Click()
-
+	d.F("SMB").Click()
+	d.F("Enterprise").Click()
+	d.F("Create").Click()
 }
 
 func TestDriver(t *testing.T) {
@@ -85,53 +88,29 @@ func TestDriver(t *testing.T) {
 		// os.Getenv("SUITE_NAME_10"), 		// iframe
 	}
 
-	d.Open(fmt.Sprintf("%s%s", host, "/login.html"))
-	d.Find(".//a[text()='Log in using Azure Active Directory']").IsDisplayed().Click()
-	d.Find("[id='i0116']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
-	d.Find("[id='i0118']").Key(os.Getenv("DOWNLOAD_PASS"))
-	d.Find("//input[@value='Увійти']").IsDisplayed().Click()
-	// d.Find("//input[@value='Так']").IsDisplayed().Click()
-	d.FindText("Так").IsDisplayed().Click()
-	d.FindText("Projects").IsDisplayed().Click()
-	d.Find("[id='search-projects']").IsDisplayed().Key(testEnv)
+	d.Url(fmt.Sprintf("%s%s", host, "/login.html"))
+	d.F("Log in using Azure Active Directory").Is().Click()
+	d.F("[id='i0116']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
+	d.F("[id='i0118']").Key(os.Getenv("DOWNLOAD_PASS"))
+	d.F("Sign in").Is().Click()
+	d.F("Yes").Is().Click()
+	d.F("Projects").Is().Click()
+	d.F("[id='search-projects']").Is().Key(testEnv)
 
 	for _, sName := range sNames {
-		// d.Find(fmt.Sprintf("//aside//span[contains(text(),'%s')]", sName)).IsDisplayed().Click()
-		d.Find("//*[@data-test='sidebar']").From(by.Text(sName)).IsDisplayed().Click()
+		// d.Find(fmt.Sprintf("//aside//span[contains(text(),'%s')]", sName)).IsDisplayed().Clickick()
+		d.F("//*[@data-test='sidebar']").From(sName).Is().Click()
 
-		buildLinkRaw := d.Find("(//*[@data-grid-root='true']//*[@data-test='ring-link'])[1]").IsDisplayed().Attribute("href")
+		buildLinkRaw := d.F("(//*[@data-grid-root='true']//*[@data-test='ring-link'])[1]").Is().Attr("href")
 		buildLink := strings.Join(strings.Split(buildLinkRaw, "/")[2:], "/")
 
 		rLinks = append(rLinks, fmt.Sprintf("%s%s%s%s", host, repo, buildLink, allure))
 	}
 
 	for _, rLink := range rLinks {
-		d.Open(rLink)
+		d.Url(rLink)
 		time.Sleep(10 * time.Second)
-		d.Find("[data-tooltip='Download CSV']").Click()
+		d.F("[data-tooltip='Download CSV']").Click()
 		time.Sleep(10 * time.Second)
 	}
-}
-
-// TestV2, TestV3
-// demo tests to run in parallel
-func TestV2(t *testing.T) {
-	t.Parallel()
-	d, tear := Driver()
-	defer tear()
-
-	d.Open("https://google.com")
-	time.Sleep(4 * time.Second)
-}
-
-func TestV3(t *testing.T) {
-	t.Parallel()
-	d, tear := Driver(
-		capabilities.BrowserName("chrome"),
-	)
-	defer tear()
-
-	time.Sleep(9 * time.Second)
-	d.Open("https://google.com")
-	time.Sleep(9 * time.Second)
 }

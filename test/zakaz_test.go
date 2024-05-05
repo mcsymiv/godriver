@@ -13,29 +13,29 @@ func TestZakaz(t *testing.T) {
 		capabilities.HeadLess(),
 		capabilities.Port("4444"),
 	)
-
 	defer tear()
 
-	d.Open("https://zakaz.ua/en/")
-	d.FindCss("[data-marker='NOVUS']").IsDisplayed().Click()
-	d.SwitchToTab(1)
-	d.Find("[data-marker='Close popup']").Click()
+	t.Run("zakaz", func(t *testing.T) {
+		d.Url("https://zakaz.ua/en/")
+		d.F("[data-marker='NOVUS']").Click()
+		d.Tab(1).F("[data-marker='Clickose popup']").Click()
+		d.F("Grocery").Click()
+		d.F("//h1[text()='Grocery']").Is()
 
-	d.FindText("Grocery").Click()
-	d.FindX("//h1[text()='Grocery']").IsDisplayed()
+		els := d.F("[id='PageWrapBody_desktopMode']").Froms(by.Css("[data-testid='product_tile_inner']"))
 
-	els := d.Find("[id='PageWrapBody_desktopMode']").Froms(by.Css("[data-testid='product_tile_inner']"))
+		var products [][]string
 
-	var products [][]string
+		for _, el := range els {
+			var product []string = []string{}
 
-	for _, el := range els {
-		var product []string = []string{}
+			pn := el.From("[data-testid='product_tile_title']")
 
-		pn := el.From(by.Css("[data-testid='product_tile_title']"))
+			product = append(product, pn.Text())
+			products = append(products, product)
+		}
 
-		product = append(product, pn.Text())
-		products = append(products, product)
-	}
+		fmt.Println(products)
+	})
 
-	fmt.Println(products)
 }

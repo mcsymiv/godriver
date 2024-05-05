@@ -4,12 +4,17 @@ import (
 	"net/http"
 )
 
-func (d *Driver) GetActive() *Element {
+func (d *Driver) Active() *Element {
 	el := new(struct{ Value map[string]string })
-	d.Client.ExecuteCmd(&Command{
+	_, err := d.Client.ExecuteCmd(&Command{
 		Path:   "/element/active",
 		Method: http.MethodGet,
 	}, el)
+
+	if err != nil {
+		return nil
+	}
+
 	eId := elementID(el.Value)
 
 	return &Element{
