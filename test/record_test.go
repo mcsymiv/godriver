@@ -9,3 +9,7 @@ import (
 func TestRecord(t *testing.T) {
 	config.CreateTest()
 }
+
+func TestSteps(t *testing.T) {
+	config.CreateSteps()
+}

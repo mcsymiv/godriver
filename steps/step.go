@@ -32,7 +32,7 @@ func (ts *Test) Cl(s string, arg string) {
 			t.Fatal("element not displayed")
 		}
 
-		el = el.Cl()
+		el = el.Click()
 		if el == nil {
 			t.Fatal("unable to click on element")
 		}

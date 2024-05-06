@@ -16,6 +16,33 @@ func (d *Driver) F(selector string) *Element {
 	return el
 }
 
+// TryF
+// TODO:
+// accepts slice of selectors and tryies to find element
+// decrease timeout
+// upd selector strategy if needed
+// upd error handling
+// add different find strategy
+func (d *Driver) TryF(selectors []string) *Element {
+	var el *Element
+
+	for _, s := range selectors {
+		w3cBy := by.Strategy(s)
+
+		el, err := find(w3cBy, d)
+		if err != nil {
+			return nil
+		}
+
+		if el.Id != "" {
+			return el
+		}
+
+	}
+
+	return el
+}
+
 func (d *Driver) Fs(selector string) *Element {
 	w3cBy := by.Css(selector)
 
