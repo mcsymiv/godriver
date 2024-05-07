@@ -3,6 +3,8 @@ package test
 import (
 	"testing"
 
+	"github.com/mcsymiv/godriver/config"
+	"github.com/mcsymiv/godriver/driver"
 	"github.com/mcsymiv/godriver/steps"
 )
 
@@ -12,11 +14,17 @@ func TestGeneratedSteps(t *testing.T) {
 
 	st := steps.Test{t, d}
 
-	st.Url("open page", "https://google.com")
+	config.LoadEnv("../config", ".env")
+
+	st.Url("open page", "some url")
+
+	st.Cl("some login profile")
+
+	loginOkta(d)
 
 	st.Cl("Search").Key("QAAuto Asset Import02")
 
-	st.Cl("QAAuto Asset Import02")
+	st.Cl("QAAuto Asset Import02").Key(driver.EnterKey)
 
 	st.Cl("//*[@data-qa-id='format-shapes']")
 
