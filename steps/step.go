@@ -1,6 +1,7 @@
 package steps
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/mcsymiv/godriver/driver"
@@ -20,9 +21,12 @@ func (ts *Test) Url(s string, arg string) {
 	})
 }
 
-func (ts *Test) Cl(s string, arg string) {
-	ts.T.Run(s, func(t *testing.T) {
-		el := ts.Driver.F(arg)
+func (ts *Test) Cl(arg string) *driver.Element {
+	var name string = fmt.Sprintf("click on %s", arg)
+	var el *driver.Element
+
+	ts.T.Run(name, func(t *testing.T) {
+		el = ts.Driver.F(arg)
 		if el == nil {
 			t.Fatal("unable to find element")
 		}
@@ -37,6 +41,8 @@ func (ts *Test) Cl(s string, arg string) {
 			t.Fatal("unable to click on element")
 		}
 	})
+
+	return el
 }
 
 func (ts *Test) Is(name string, arg string) {
