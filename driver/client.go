@@ -22,7 +22,7 @@ type Client struct {
 func newClient(baseURL string) *Client {
 	return &Client{
 		BaseURL:            baseURL,
-		RequestReaderLimit: 2048,
+		RequestReaderLimit: 4096,
 
 		HTTPClient: &http.Client{
 			Transport: &retryRoundTripper{
