@@ -6,6 +6,7 @@ import (
 
 	"github.com/mcsymiv/godriver/capabilities"
 	"github.com/mcsymiv/godriver/driver"
+	"github.com/mcsymiv/godriver/file"
 	"github.com/xlzd/gotp"
 )
 
@@ -14,6 +15,9 @@ func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	if d == nil {
 		log.Fatal("Unable to start driver")
 	}
+
+	file.LoadEnv("../config", ".env")
+
 	return d, func() {
 		// teardown
 		d.Quit()

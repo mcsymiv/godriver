@@ -6,10 +6,9 @@ import (
 	"github.com/mcsymiv/godriver/record"
 )
 
-func TestRecord(t *testing.T) {
-	record.CreateTest()
-}
-
 func TestSteps(t *testing.T) {
-	record.CreateSteps()
+	var tName string = "../test/steps_test.go"
+	var rName string = "record_3.json"
+
+	record.CreateSteps(tName, rName)
 }

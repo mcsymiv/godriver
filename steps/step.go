@@ -12,8 +12,9 @@ type Test struct {
 	*driver.Driver
 }
 
-func (ts *Test) Url(s string, arg string) {
-	ts.T.Run(s, func(t *testing.T) {
+func (ts *Test) Url(arg string) {
+	var name string = fmt.Sprintf("open %s", arg)
+	ts.T.Run(name, func(t *testing.T) {
 		d := ts.Driver.Url(arg)
 		if d == nil {
 			t.Fatal("unable to open url")

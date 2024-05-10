@@ -1,42 +1,41 @@
 package test
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
-	"github.com/mcsymiv/godriver/config"
-	"github.com/mcsymiv/godriver/driver"
+	"github.com/mcsymiv/godriver/capabilities"
 	"github.com/mcsymiv/godriver/steps"
 )
 
 func TestGeneratedSteps(t *testing.T) {
-	d, tear := Driver()
+	d, tear := Driver(
+		capabilities.HeadLess(),
+	)
 	defer tear()
 
 	st := steps.Test{t, d}
 
-	config.LoadEnv("../config", ".env")
+	fmt.Println(os.Getenv("SUB_ENVIRONMENT"))
 
-	st.Url("open page", "some url")
+	st.Url("https://google.com")
 
-	st.Cl("some login profile")
-
-	loginOkta(d)
-
-	st.Cl("Search").Key("QAAuto Asset Import02")
-
-	st.Cl("QAAuto Asset Import02").Key(driver.EnterKey)
-
-	st.Cl("//*[@data-qa-id='format-shapes']")
-
-	st.Cl("Permissions")
-
-	st.Cl("Manage Pages")
-
-	st.Cl("//*[@data-qa-id='insert-text']")
-
-	st.Cl("//*[@id='Hyta_MCQHr-background']")
-
-	st.Cl("Save")
-
-	st.Cl("//*[@data-qa-id='back-to']")
+	// st.Cl("//*[@id='ceff842f-22cf-4f56-ac12-f30fa465761b']")
+	//
+	// st.Cl("QAAuto Asset Import02")
+	//
+	// st.Cl("//*[@data-qa-id='format-shapes']")
+	//
+	// st.Cl("Permissions")
+	//
+	// st.Cl("Manage Pages")
+	//
+	// st.Cl("//*[@data-qa-id='insert-text']")
+	//
+	// st.Cl("//*[@id='Hyta_MCQHr-background']")
+	//
+	// st.Cl("Save")
+	//
+	// st.Cl("//*[@data-qa-id='back-to']")
 }
