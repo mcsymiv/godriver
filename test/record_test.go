@@ -3,13 +3,13 @@ package test
 import (
 	"testing"
 
-	"github.com/mcsymiv/godriver/config"
+	"github.com/mcsymiv/godriver/record"
 )
 
 func TestRecord(t *testing.T) {
-	config.CreateTest()
+	record.CreateTest()
 }
 
 func TestSteps(t *testing.T) {
-	config.CreateSteps()
+	record.CreateSteps()
 }
