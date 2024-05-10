@@ -1,2 +1,4 @@
+github.com/mcsymiv/go-brand v0.0.0-20240505045743-d335b78d6ad0 h1:xZTZgaWjV+ChRrROEGziWi3UpjBQFiMSgskjfsYyyIU=
+github.com/mcsymiv/go-brand v0.0.0-20240505045743-d335b78d6ad0/go.mod h1:Ta5UIiciWEawSuUU9oiujcbkojXuQgtXen2vdIqCcdc=
 github.com/xlzd/gotp v0.1.0 h1:37blvlKCh38s+fkem+fFh7sMnceltoIEBYTVXyoa5Po=
 github.com/xlzd/gotp v0.1.0/go.mod h1:ndLJ3JKzi3xLmUProq4LLxCuECL93dG9WASNLpHz8qg=

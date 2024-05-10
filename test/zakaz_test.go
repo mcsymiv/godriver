@@ -6,6 +6,7 @@ import (
 
 	"github.com/mcsymiv/godriver/by"
 	"github.com/mcsymiv/godriver/capabilities"
+	"github.com/mcsymiv/godriver/steps"
 )
 
 func TestZakaz(t *testing.T) {
@@ -14,6 +15,8 @@ func TestZakaz(t *testing.T) {
 		capabilities.Port("4444"),
 	)
 	defer tear()
+
+	st := steps.Test{t, d}
 
 	t.Run("zakaz", func(t *testing.T) {
 		d.Url("https://zakaz.ua/en/")

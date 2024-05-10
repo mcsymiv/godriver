@@ -96,6 +96,14 @@ func HeadLess() CapabilitiesFunc {
 	}
 }
 
+func ChromeArgs(args []string) CapabilitiesFunc {
+	return func(cap *Capabilities) {
+		cap.Capabilities.AlwaysMatch.ChromeOptions = ChromeOptions{
+			Args: args,
+		}
+	}
+}
+
 func BrowserName(b string) CapabilitiesFunc {
 	return func(cap *Capabilities) {
 		cap.Capabilities.AlwaysMatch.BrowserName = b
