@@ -9,23 +9,12 @@ import (
 	"time"
 
 	"github.com/mcsymiv/godriver/capabilities"
-	"github.com/mcsymiv/godriver/config"
 	"github.com/mcsymiv/godriver/driver"
-	"github.com/xlzd/gotp"
 )
-
-func loginOkta(d *driver.Driver) {
-	d.F("//*[@id='okta-signin-username']").Key(os.Getenv("OKTA_LOGIN"))
-	d.F("//*[@id='okta-signin-password']").Key(os.Getenv("OKTA_PASS")).Key(driver.EnterKey)
-	totp := gotp.NewDefaultTOTP(os.Getenv("OKTA_TOTP"))
-	d.F("//*[@id='input59']").Key(totp.Now()).Key(driver.EnterKey)
-}
 
 func TestDeleteAccount(t *testing.T) {
 	d, tear := Driver()
 	defer tear()
-
-	config.LoadEnv("../config", ".env")
 
 	d.Url(os.Getenv("SUB_ENVIRONMENT_01"))
 	loginOkta(d)
@@ -45,8 +34,6 @@ func TestNewAccount(t *testing.T) {
 		capabilities.HeadLess(),
 	)
 	defer tear()
-
-	config.LoadEnv("../config", ".env")
 
 	d.Url(os.Getenv("SUB_ENVIRONMENT"))
 	loginOkta(d)
@@ -70,7 +57,6 @@ func TestDriver(t *testing.T) {
 
 	repo := "/repository/download/"
 	allure := ":id/allure-report.zip!/allure-report-test/index.html#suites"
-	config.LoadEnv("../config", ".env")
 	host := os.Getenv("DOWNLOAD_HOST")
 	testEnv := "dev01"
 

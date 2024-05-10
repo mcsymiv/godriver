@@ -1,4 +1,4 @@
-package config
+package file
 
 import (
 	"bufio"
@@ -10,6 +10,9 @@ import (
 	"strings"
 )
 
+// FindFile
+// returns full file name fPath
+// or empty string
 func FindFile(fPath, fName string) string {
 	f, err := findFile(fPath, fName)
 	if err != nil {
@@ -42,7 +45,6 @@ func findFile(fPath, fName string) (string, error) {
 	return f, nil
 }
 
-// ExecReplace
 func dotenv(filepath string) {
 	// read file into memory
 	f, err := os.Open(filepath)
@@ -58,6 +60,7 @@ func dotenv(filepath string) {
 		if env == "" {
 			continue
 		}
+
 		key := strings.Split(env, "=")[0]
 		value := strings.Split(env, "=")[1]
 		os.Setenv(key, value)

@@ -6,23 +6,24 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/mcsymiv/godriver/config"
+	"github.com/mcsymiv/godriver/file"
 )
 
 func (d Driver) ExecuteScript(fName string, args ...string) interface{} {
-	f := config.FindFile("../js", fName)
+	// replace to format package call
+	f := file.FindFile("../js", fName)
 
 	// only one arg will be applied
 	// slice serves as "optional" argument
 	if len(args) == 1 {
 		for _, arg := range args {
-			act := &config.ReplaceWord{
-				ReplaceLine: &config.ReplaceLine{
+			act := &file.ReplaceWord{
+				ReplaceLine: &file.ReplaceLine{
 					Old: "<placeholder>",
 					New: arg,
 				},
 			}
-			config.Exec(act, f)
+			file.Exec(act, f)
 		}
 	}
 

@@ -98,9 +98,18 @@ func newCommandRequest(c *Client, cmd *Command) (*http.Request, error) {
 
 	url := fmt.Sprintf("%s%s", c.BaseURL, cPath)
 
-	rr := io.LimitReader(ReusableReader(bytes.NewReader(cmd.Data)), c.RequestReaderLimit)
-	reqBody := io.NopCloser(rr)
-	req, err := http.NewRequest(cmd.Method, url, reqBody)
+	// TODO: investigate on chrome API, read upon bytes.NewReader vs bytes.NewBuffer diff
+	// review if reusable request is needed(?)
+	// chromedriver does not accept reusable Reader, i.e. bytes.NewReader(cmd.Data)
+	// but, bytes.NewBuffer() without NopCloser wrappper works(!)
+	// note: geckodriver is fine with reusable request reader
+	//
+	// rUse := ReusableReader(bytes.NewReader(cmd.Data))
+	// rr := io.LimitReader(rUse, c.RequestReaderLimit)
+	// reqBody := io.NopCloser(rr)
+	// req, err := http.NewRequest(cmd.Method, url, reqBody)
+
+	req, err := http.NewRequest(cmd.Method, url, bytes.NewBuffer(cmd.Data))
 	if err != nil {
 		return nil, fmt.Errorf("error on new request: %v", err)
 	}
