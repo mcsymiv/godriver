@@ -9,6 +9,7 @@ import (
 	"os/exec"
 
 	"github.com/mcsymiv/godriver/capabilities"
+	"github.com/mcsymiv/godriver/config"
 )
 
 type Driver struct {
@@ -63,6 +64,8 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 			s.Id,
 		),
 	)
+
+	config.TestSetting = config.DefaultSetting()
 
 	return &Driver{
 		Client:       c,

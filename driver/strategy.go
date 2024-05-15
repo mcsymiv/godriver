@@ -2,9 +2,12 @@ package driver
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/mcsymiv/godriver/config"
 )
 
 type findStrategy struct {
@@ -17,15 +20,35 @@ type findStrategy struct {
 
 func newFindStrategy(d *Driver) *findStrategy {
 	return &findStrategy{
-		Client:  &http.Client{},
 		driver:  d,
-		timeout: 20, // in 20 seconds time window performs up to 2 retries to find element
-		delay:   700,
+		timeout: config.TestSetting.TimeoutFind,
+		delay:   config.TestSetting.TimeoutDelay,
 	}
 }
 
 func (cl findStrategy) Exec(r *buffRequest) (*buffResponse, error) {
 	return nil, nil
+}
+
+func drainBody(resp *http.Response) {
+	if resp.Body != nil {
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+	}
+}
+
+func copyReqBody(req *http.Request) *http.Request {
+	rUse := ReusableReader(req.Body)
+	rr := io.LimitReader(rUse, 4096)
+	reqBody := io.NopCloser(rr)
+	req.Body = reqBody
+
+	// req2, err := http.NewRequest(req.Method, req.URL.String(), reqBody)
+	// if err != nil {
+	// 	log.Println("unable to copy request: %v", err)
+	// }
+
+	return req
 }
 
 // Execute
@@ -36,20 +59,23 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 	var res *http.Response
 	var err error
 
+	req = copyReqBody(req)
 	res, err = f.driver.Client.HTTPClient.Do(req)
 
 	if res.StatusCode == http.StatusNotFound {
 		log.Printf("element not fount: %v", res.StatusCode)
 
 		start := time.Now()
-		end := start.Add(f.timeout * time.Second)
+		end := start.Add(config.TestSetting.TimeoutFind * time.Second)
 
 		for {
 			log.Println("find retry")
-			time.Sleep(f.delay * time.Millisecond)
+			time.Sleep(config.TestSetting.TimeoutDelay * time.Millisecond)
 
+			drainBody(res)
 			res, err = f.driver.Client.HTTPClient.Do(req)
 			if err != nil {
+				log.Println("error on client request", err)
 				err = fmt.Errorf("error on find retry: %v", err)
 				break
 			}
@@ -59,9 +85,17 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 			}
 
 			if time.Now().After(end) {
-				f.driver.Screenshot()
-				err = fmt.Errorf("unable to find element with %v timeout: %v", f.timeout, err)
+
+				if config.TestSetting.ScreenshotOnFail {
+					f.driver.Screenshot()
+				}
+
+				err = fmt.Errorf("unable to find element with %v timeout: %v", config.TestSetting.TimeoutFind, err)
 				break
+			}
+
+			if config.TestSetting.RefreshOnFindError {
+				f.driver.Refresh()
 			}
 		}
 	}

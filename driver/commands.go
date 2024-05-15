@@ -7,11 +7,9 @@ import (
 	"net/http"
 )
 
-// type WrapCommand func(CommandHandler) CommandHandler
-
-// type CommandHandler func(*http.Request) (*http.Response, error)
-
-// Route represents a specific API route and its handler function.
+// Command
+// represents a request (command) to webdriver
+// with added Strategies to execute in CommandExecutor
 type Command struct {
 	Path           string
 	Method         string
@@ -23,6 +21,7 @@ type Command struct {
 	Strategies []CommandExecutor
 }
 
+// CommandExecutor
 // strategy to remove duplicates in execute Command/Request
 type CommandExecutor interface {
 	Execute(req *http.Request) (*http.Response, error)
@@ -103,8 +102,8 @@ func newCommandRequest(c *Client, cmd *Command) (*http.Request, error) {
 	// chromedriver does not accept reusable Reader, i.e. bytes.NewReader(cmd.Data)
 	// but, bytes.NewBuffer() without NopCloser wrappper works(!)
 	// note: geckodriver is fine with reusable request reader
-	//
-	// rUse := ReusableReader(bytes.NewReader(cmd.Data))
+
+	// rUse := ReusableReader(bytes.NewBuffer(cmd.Data))
 	// rr := io.LimitReader(rUse, c.RequestReaderLimit)
 	// reqBody := io.NopCloser(rr)
 	// req, err := http.NewRequest(cmd.Method, url, reqBody)
