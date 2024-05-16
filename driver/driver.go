@@ -12,6 +12,20 @@ import (
 	"github.com/mcsymiv/godriver/config"
 )
 
+const (
+	PathFrame            = "/frame"
+	PathElementFind      = "/element"
+	PathElementsFind     = "/elements"
+	PathElementActive    = "/element/active"
+	PathElementDisplayed = "/element/%s/displayed"
+	PathElementClear     = "/element/%s/clear"
+	PathElementValue     = "/element/%s/value"
+	PathFromElement      = "/element/%s/element"
+	PathFromElements     = "/element/%s/elements"
+	PathElementAttribute = "/element/%s/attribute/%s"
+	PathElementClick     = "/element/%s/click"
+)
+
 type Driver struct {
 	Client       *Client
 	Session      *Session

@@ -39,3 +39,17 @@ func DefaultSetting() *Setting {
 		RefreshOnFindError: true,
 	}
 }
+
+type SettingsFunc func(*Setting)
+
+func WithTimeoutDelay(t time.Duration) SettingsFunc {
+	return func(s *Setting) {
+		s.TimeoutDelay = t
+	}
+}
+
+func WithTimeoutFind(t time.Duration) SettingsFunc {
+	return func(s *Setting) {
+		s.TimeoutFind = t
+	}
+}

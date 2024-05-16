@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -37,6 +38,12 @@ type buffResponse struct {
 	*http.Response
 	buff  []byte
 	bRead func() io.ReadCloser // callback when response with body required
+}
+
+func printBuffRes(b []*buffResponse) {
+	for _, bRes := range b {
+		log.Println(bRes.bRead())
+	}
 }
 
 type buffRequest struct {

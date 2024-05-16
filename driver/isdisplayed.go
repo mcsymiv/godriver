@@ -7,13 +7,24 @@ import (
 
 // IsDisplayed
 func (e *Element) IsDisplayed() *Element {
+
+	if e.ElementError != nil {
+		return &Element{
+			ElementError: fmt.Errorf("displayed element got error: %v", e.ElementError),
+		}
+	}
+
 	dis, err := isDisplayed(e)
 	if err != nil {
-		return nil
+		return &Element{
+			ElementError: fmt.Errorf("displayed got: %v", err),
+		}
 	}
 
 	if !dis {
-		return nil
+		return &Element{
+			ElementError: fmt.Errorf("element is NOT displayed got: %v", dis),
+		}
 	}
 
 	return e

@@ -7,7 +7,7 @@ import (
 func (d *Driver) Active() *Element {
 	el := new(struct{ Value map[string]string })
 	_, err := d.Client.ExecuteCmd(&Command{
-		Path:   "/element/active",
+		Path:   PathElementActive,
 		Method: http.MethodGet,
 	}, el)
 
