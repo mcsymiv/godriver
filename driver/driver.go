@@ -30,6 +30,7 @@ const (
 	PathElementsFromElement = "/element/%s/elements"
 	PathElementAttribute    = "/element/%s/attribute/%s"
 	PathElementClick        = "/element/%s/click"
+	PathElementText         = "/element/%s/text"
 )
 
 type Driver struct {

@@ -78,4 +78,6 @@ func (cl *Client) exec(cmd *Command, any interface{}) {
 			panic(err)
 		}
 	}
+
+	defer res.Body.Close()
 }

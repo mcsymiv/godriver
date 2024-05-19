@@ -5,7 +5,7 @@ import "net/http"
 func (el *Element) Text() string {
 	t := new(struct{ Value string })
 	el.Client.ExecuteCommand(&Command{
-		Path:           "/element/%s/text",
+		Path:           PathElementText, 
 		PathFormatArgs: []any{el.Id},
 		Method:         http.MethodGet,
 	}, t)

@@ -54,6 +54,8 @@ func (f *findStrategy) exec(cmd *Command, any interface{}) {
 			break
 		}
 
+		res.Body.Close()
+
 		if time.Now().After(end) {
 
 			if config.TestSetting.ScreenshotOnFail {
@@ -108,6 +110,8 @@ func (f *displayStrategy) exec(cmd *Command, any interface{}) {
 			}
 		}
 
+		res.Body.Close()
+
 		if time.Now().After(end) {
 
 			if config.TestSetting.ScreenshotOnFail {
@@ -139,9 +143,11 @@ func (f *clickStrategy) exec(cmd *Command, any interface{}) {
 		panic(err)
 	}
 
-	_, err = f.Driver.Client.HTTPClient.Do(req)
+	res, err := f.Driver.Client.HTTPClient.Do(req)
 	if err != nil {
 		log.Println("error on Client Do Request")
 		panic(err)
 	}
+
+	defer res.Body.Close()
 }
