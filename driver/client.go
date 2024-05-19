@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -36,66 +37,47 @@ func newClient(baseURL string) *Client {
 	}
 }
 
-// Execute
-// default command executor impl
-// performs http.Client request
-// serves as command executor middleware for all default commands,
-// i.e. withoud defined CommandExecutor stategy
-func (cl *Client) Execute(req *http.Request) (*http.Response, error) {
+func (c *Client) ExecuteCommand(cmd *Command, d any) {
+	execCtx := &execContext{
+		cmd: c,
+	}
+
+	if cmd.Strategy != nil {
+		execCtx.cmd = cmd.Strategy
+	}
+
+	execCtx.cmd.exec(cmd, d)
+}
+
+func (cl *Client) exec(cmd *Command, any interface{}) {
+	var cPath string = cmd.Path
+	if len(cmd.PathFormatArgs) != 0 {
+		cPath = fmt.Sprintf(cmd.Path, cmd.PathFormatArgs...)
+	}
+
+	url := fmt.Sprintf("%s%s", cl.BaseURL, cPath)
+
+	req, err := http.NewRequest(cmd.Method, url, bytes.NewBuffer(cmd.Data))
+	if err != nil {
+		panic(err)
+	}
+
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
+
 	res, err := cl.HTTPClient.Do(req)
 	if err != nil {
 		log.Println("error on strategy exec:", err)
-		return nil, err
+		panic(err)
 	}
 
-	return res, nil
-}
-
-func (cl *Client) Exec(r *buffRequest) (*buffResponse, error) {
-	return nil, nil
-}
-
-// ExecuteCmd
-//  1. general purpose client receiver
-//     executes prepared command and strategies (if defined)
-//     when no strategy difened, executes client request
-//  2. unmarshals passed data struct
-//
-// TODO: refactor to internal use, i.e. executeCmd
-func (c *Client) ExecuteCmd(cmd *Command, d ...any) ([]*buffResponse, error) {
-	req, err := newCommandRequest(c, cmd)
-	if err != nil {
-		return nil, fmt.Errorf("error on new command request: %v", err)
-	}
-
-	st := newExecutorContext(c, cmd)
-	for i, s := range st.cmds {
-
-		// executes request inside defined CommandExecutor strategy
-		// if none provided, performs http.Request with Client's DefaultExecuteStrategy
-		res, err := s.Execute(req)
+	if any != nil {
+		err = json.NewDecoder(res.Body).Decode(any)
 		if err != nil {
-			return nil, fmt.Errorf("error on new strategy exec: %+v", err)
-		}
-		defer res.Body.Close()
-
-		st.bufs[i], err = newBuffResponse(res)
-		if err != nil {
-			return nil, fmt.Errorf("error on new buffered response: %v", err)
+			log.Println("error on strategy exec:", err)
+			panic(err)
 		}
 	}
 
-	if len(st.bufs) > 0 && len(d) > 0 {
-		for i, res := range st.bufs {
-			err := json.Unmarshal(res.buff, d[i])
-
-			if err != nil {
-				return nil, fmt.Errorf("error on unmarshal %d response: %v", i, err)
-			}
-		}
-	}
-
-	return st.bufs, nil
+	defer res.Body.Close()
 }

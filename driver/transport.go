@@ -9,7 +9,6 @@ import (
 
 // retryRoundTripper
 // http.RoundTrip client middleware
-// TODO: add retry logic
 // most of request retries will be handled in strategies
 // serves as a general retry between client and webdriver
 type retryRoundTripper struct {
@@ -20,12 +19,13 @@ type retryRoundTripper struct {
 
 // RoundTrip
 // middleware for retries
-// TODO: add global retry logic
 func (rr retryRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	res, err := rr.next.RoundTrip(r)
 	if err != nil {
 		return res, err
 	}
+
+	defer r.Body.Close()
 
 	return res, nil
 }
@@ -40,6 +40,7 @@ type logginRoundTripper struct {
 func (l logginRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	res, err := l.next.RoundTrip(r)
 	if err != nil {
+		log.Println("error on request", err)
 		return nil, fmt.Errorf("error on %v request: %v", r, err)
 	}
 

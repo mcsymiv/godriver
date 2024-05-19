@@ -7,7 +7,7 @@ import (
 
 func (d Driver) PageSource() {
 	s := new(struct{ Value string })
-	d.Client.ExecuteCmd(&Command{
+	d.Client.ExecuteCommand(&Command{
 		Path:   "/source",
 		Method: http.MethodGet,
 	}, s)
