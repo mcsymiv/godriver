@@ -31,7 +31,8 @@ type Empty struct{}
 // Element
 // W3C WebElement
 type Element struct {
-	Id string
+	ElementError error
+	Id           string
 	by.Selector
 	*Driver
 }

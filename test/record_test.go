@@ -7,8 +7,9 @@ import (
 )
 
 func TestSteps(t *testing.T) {
-	var tName string = "../test/steps_test.go"
-	var rName string = "record_3.json"
+	var fName string = "../test/brn_test.go"
+	var rName string = "brn.json"
+	var tName string = "Brn"
 
-	record.CreateSteps(tName, rName)
+	record.CreateSteps(fName, rName, tName)
 }

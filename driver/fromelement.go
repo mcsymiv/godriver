@@ -7,14 +7,9 @@ import (
 	"github.com/mcsymiv/godriver/by"
 )
 
-const (
-	fromElementPath  = "/element/%s/element"
-	fromElementsPath = "/element/%s/elements"
-)
-
 func from(by by.Selector, e *Element) (*Element, error) {
 	op := &Command{
-		Path:           fromElementPath,
+		Path:           PathElementFromElement,
 		PathFormatArgs: []any{e.Id},
 		Method:         http.MethodPost,
 		Data: marshalData(&JsonFindUsing{
@@ -55,7 +50,7 @@ func (e *Element) From(s string) *Element {
 
 func (e *Element) Froms(by by.Selector) []*Element {
 	op := &Command{
-		Path:           fromElementsPath,
+		Path:           PathElementsFromElement,
 		PathFormatArgs: []any{e.Id},
 		Method:         http.MethodPost,
 		Data: marshalData(&JsonFindUsing{

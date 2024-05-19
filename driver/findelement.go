@@ -1,6 +1,8 @@
 package driver
 
 import (
+	"fmt"
+
 	"github.com/mcsymiv/godriver/by"
 )
 
@@ -10,7 +12,7 @@ func (d *Driver) F(selector string) *Element {
 
 	el, err := find(w3cBy, d)
 	if err != nil {
-		return nil
+		panic(fmt.Errorf("unable to find element, got: %v", err))
 	}
 
 	return el

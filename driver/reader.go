@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 )
 
 // reusableReader
@@ -70,4 +71,8 @@ func unmarshalResponses(buffRes []*buffResponse, any ...interface{}) error {
 	}
 
 	return err
+}
+
+func unmarshalRes(res *http.Response, any interface{}) error {
+	return json.NewDecoder(res.Body).Decode(any)
 }

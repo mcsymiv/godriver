@@ -2,9 +2,12 @@ package driver
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/mcsymiv/godriver/config"
 )
 
 type findStrategy struct {
@@ -17,15 +20,33 @@ type findStrategy struct {
 
 func newFindStrategy(d *Driver) *findStrategy {
 	return &findStrategy{
-		Client:  &http.Client{},
-		driver:  d,
-		timeout: 20, // in 20 seconds time window performs up to 2 retries to find element
-		delay:   700,
+		driver: d,
 	}
 }
 
 func (cl findStrategy) Exec(r *buffRequest) (*buffResponse, error) {
 	return nil, nil
+}
+
+func drainBody(resp *http.Response) {
+	if resp.Body != nil {
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+	}
+}
+
+func copyReqBody(req *http.Request) *http.Request {
+	rUse := ReusableReader(req.Body)
+	rr := io.LimitReader(rUse, 4096)
+	reqBody := io.NopCloser(rr)
+	// req.Body = reqBody
+
+	req2, err := http.NewRequest(req.Method, req.URL.String(), reqBody)
+	if err != nil {
+		log.Println("unable to copy request: %v", err)
+	}
+
+	return req2
 }
 
 // Execute
@@ -36,20 +57,23 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 	var res *http.Response
 	var err error
 
+	req = copyReqBody(req)
 	res, err = f.driver.Client.HTTPClient.Do(req)
 
 	if res.StatusCode == http.StatusNotFound {
 		log.Printf("element not fount: %v", res.StatusCode)
 
 		start := time.Now()
-		end := start.Add(f.timeout * time.Second)
+		end := start.Add(config.TestSetting.TimeoutFind * time.Second)
 
 		for {
 			log.Println("find retry")
-			time.Sleep(f.delay * time.Millisecond)
+			time.Sleep(config.TestSetting.TimeoutDelay * time.Millisecond)
 
+			drainBody(res)
 			res, err = f.driver.Client.HTTPClient.Do(req)
 			if err != nil {
+				log.Println("error on client request", err)
 				err = fmt.Errorf("error on find retry: %v", err)
 				break
 			}
@@ -59,9 +83,17 @@ func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
 			}
 
 			if time.Now().After(end) {
-				f.driver.Screenshot()
-				err = fmt.Errorf("unable to find element with %v timeout: %v", f.timeout, err)
+
+				if config.TestSetting.ScreenshotOnFail {
+					f.driver.Screenshot()
+				}
+
+				err = fmt.Errorf("unable to find element with %v timeout: %v", config.TestSetting.TimeoutFind, err)
 				break
+			}
+
+			if config.TestSetting.RefreshOnFindError {
+				f.driver.Refresh()
 			}
 		}
 	}
@@ -85,9 +117,7 @@ func (cl clickStrategy) Exec(r *buffRequest) (*buffResponse, error) {
 }
 
 type displayStrategy struct {
-	findReq *http.Request
 	*Driver
-	timeout, delay time.Duration
 }
 
 func (dis displayStrategy) Exec(r *buffRequest) (*buffResponse, error) {
@@ -96,43 +126,41 @@ func (dis displayStrategy) Exec(r *buffRequest) (*buffResponse, error) {
 
 func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
 	var displayRes = new(struct{ Value bool })
-	var buffRes *buffResponse
-	var err error
+	var res *http.Response
 
-	// start waiter check
-	for start := time.Now(); time.Since(start) < dis.timeout*time.Second; {
-		res, err := dis.Driver.Client.HTTPClient.Do(req)
-		if err != nil {
-			err = fmt.Errorf("error on display strategy request")
-			break
-		}
-		defer res.Body.Close()
-
-		buffRes, err = newBuffResponse(res)
-		if err != nil {
-			err = fmt.Errorf("error on isDisplay value retry, new buffered response: %v", err)
-			break
-		}
-		err = unmarshalResponses([]*buffResponse{buffRes}, displayRes)
-		if err != nil {
-			break
-		}
-
-		if displayRes.Value {
-			break
-		}
-
-		time.Sleep(dis.delay * time.Millisecond)
+	res, err := dis.Driver.Client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error on is display request")
 	}
 
-	buffRes.Response.Body = buffRes.bRead()
+	start := time.Now()
+	end := start.Add(config.TestSetting.TimeoutFind * time.Second)
 
-	// if not displayed, dis.Screenshot()
-	if !displayRes.Value {
-		dis.Screenshot()
-		return buffRes.Response, fmt.Errorf("element is not displayed")
+	for {
+		time.Sleep(config.TestSetting.TimeoutDelay * time.Millisecond)
+
+		if res.StatusCode == http.StatusOK {
+			err = unmarshalRes(res, displayRes)
+			if err != nil {
+				return nil, fmt.Errorf("error on unmarshal display body, got: %v", err)
+			}
+
+			if displayRes.Value {
+				return res, nil
+			}
+		}
+
+		if time.Now().After(end) {
+			if config.TestSetting.ScreenshotOnFail {
+				dis.Screenshot()
+			}
+
+			return nil, fmt.Errorf("element not displayed within %v timeout, got: %v", config.TestSetting.TimeoutFind, err)
+		}
+
+		res, err = dis.Driver.Client.HTTPClient.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("error on display request")
+		}
 	}
-
-	// set NopCloser response with body
-	return buffRes.Response, err
 }

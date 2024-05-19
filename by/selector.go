@@ -27,6 +27,9 @@ func DefineStrategy(s string) string {
 	return ByCssSelector
 }
 
+// checkSubstrings
+// wrapper around strings.Contains
+// to check multiple substrings
 func checkSubstrings(str string, subs ...string) (bool, int) {
 	matches := 0
 	isCompleteMatch := true
@@ -42,6 +45,19 @@ func checkSubstrings(str string, subs ...string) (bool, int) {
 	return isCompleteMatch, matches
 }
 
+// Strategy
+// defines find element Strategy
+// based on selectors "pattern"
+//
+// xpath:
+// generally starts with forward slash /
+//
+// css:
+// for simplicity, it check for opening bracket [
+//
+// text:
+// as final option, if selector does not contain /, [ symbols
+// XPathTextStrategy will be used
 func Strategy(value string) Selector {
 	if value[0] == '/' || strings.Contains(value, "/") {
 		return Selector{
@@ -62,7 +78,10 @@ func Strategy(value string) Selector {
 }
 
 // XPathTextStrategy
-// text/value based find strategy
+// text/value based find xPathTextStrategy
+// *[text()='%[1]s']
+// *[@placeholder='%[1]s']
+// *[@value='%[1]s']
 func xPathTextStrategy(value string) Selector {
 	return Selector{
 		Using: ByXPath,

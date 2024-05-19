@@ -69,23 +69,53 @@ const (
 )
 
 func (el *Element) Key(s string) *Element {
-	el.Client.ExecuteCmd(&Command{
-		Path:   fmt.Sprintf("/element/%s/value", el.Id),
-		Method: http.MethodPost,
+
+	if el.ElementError != nil {
+		return &Element{
+			ElementError: fmt.Errorf("element for value got error: %v", el.ElementError),
+		}
+	}
+
+	bRes, err := el.Client.ExecuteCmd(&Command{
+		Path:           PathElementValue,
+		PathFormatArgs: []any{el.Id},
+		Method:         http.MethodPost,
 		Data: marshalData(&SendKeys{
 			Text: s,
 		}),
 	})
 
+	if err != nil {
+		printBuffRes(bRes)
+		return &Element{
+			ElementError: fmt.Errorf("element value got error: %v", err),
+		}
+	}
+
 	return el
 }
 
 func (el *Element) Clear() *Element {
-	el.Client.ExecuteCmd(&Command{
-		Path:   fmt.Sprintf("/element/%s/clear", el.Id),
-		Method: http.MethodPost,
-		Data:   marshalData(&Empty{}),
+
+	if el.ElementError != nil {
+		return &Element{
+			ElementError: fmt.Errorf("element to clear got error: %v", el.ElementError),
+		}
+	}
+
+	bRes, err := el.Client.ExecuteCmd(&Command{
+		Path:           PathElementClear,
+		PathFormatArgs: []any{el.Id},
+		Method:         http.MethodPost,
+		Data:           marshalData(&Empty{}),
 	})
+
+	if err != nil {
+		printBuffRes(bRes)
+		return &Element{
+			ElementError: fmt.Errorf("element clear got error: %v", err),
+		}
+	}
 
 	return el
 }

@@ -9,6 +9,27 @@ import (
 	"os/exec"
 
 	"github.com/mcsymiv/godriver/capabilities"
+	"github.com/mcsymiv/godriver/config"
+)
+
+const (
+	PathDriverUrl           = "/url"
+	PathDriverFrame         = "/frame"
+	PathDriverRefresh       = "/refresh"
+	PathDriverWindow        = "/windown"
+	PathDriverWindowNew     = "/windown/new"
+	PathDriverWindowHandles = "/windown/handles"
+
+	PathElementFind         = "/element"
+	PathElementsFind        = "/elements"
+	PathElementActive       = "/element/active"
+	PathElementDisplayed    = "/element/%s/displayed"
+	PathElementClear        = "/element/%s/clear"
+	PathElementValue        = "/element/%s/value"
+	PathElementFromElement  = "/element/%s/element"
+	PathElementsFromElement = "/element/%s/elements"
+	PathElementAttribute    = "/element/%s/attribute/%s"
+	PathElementClick        = "/element/%s/click"
 )
 
 type Driver struct {
@@ -63,6 +84,8 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 			s.Id,
 		),
 	)
+
+	config.TestSetting = config.DefaultSetting()
 
 	return &Driver{
 		Client:       c,

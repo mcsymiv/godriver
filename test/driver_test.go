@@ -3,6 +3,7 @@ package test
 import (
 	// "fmt"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -78,18 +79,20 @@ func TestDriver(t *testing.T) {
 	d.F("Log in using Azure Active Directory").Is().Click()
 	d.F("[id='i0116']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
 	d.F("[id='i0118']").Key(os.Getenv("DOWNLOAD_PASS"))
-	d.F("Sign in").Is().Click()
-	d.F("Yes").Is().Click()
-	d.F("Projects").Is().Click()
-	d.F("[id='search-projects']").Is().Key(testEnv)
+	d.F("//*[@value='Увійти']").Click()
+	d.F("Так").Click()
+	d.F("Projects").Click()
+	d.F("[id='search-projects']").Key(testEnv)
 
 	for _, sName := range sNames {
-		// d.Find(fmt.Sprintf("//aside//span[contains(text(),'%s')]", sName)).IsDisplayed().Clickick()
-		d.F("//*[@data-test='sidebar']").From(sName).Is().Click()
+		log.Println(sName)
+		d.F(fmt.Sprintf("//*[@data-test='sidebar']//span[contains(text(),'%s')]", sName)).Is().Click()
+		d.F(fmt.Sprintf("//h1//*[text()='%s']", sName)).Is()
 
-		buildLinkRaw := d.F("(//*[@data-grid-root='true']//*[@data-test='ring-link'])[1]").Is().Attr("href")
+		buildLinkRaw := d.F("(//*[@data-grid-root='true']//*[@data-test='ring-link'])[1]").Attr("href")
 		buildLink := strings.Join(strings.Split(buildLinkRaw, "/")[2:], "/")
 
+		log.Println(buildLink)
 		rLinks = append(rLinks, fmt.Sprintf("%s%s%s%s", host, repo, buildLink, allure))
 	}
 

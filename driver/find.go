@@ -13,7 +13,7 @@ import (
 func newFindCommand(by by.Selector, d *Driver) *Command {
 
 	return &Command{
-		Path:   "/element",
+		Path:   PathElementFind,
 		Method: http.MethodPost,
 		Data: marshalData(&JsonFindUsing{
 			Using: by.Using,
@@ -44,7 +44,7 @@ func find(b by.Selector, d *Driver) (*Element, error) {
 
 func finds(by by.Selector, d *Driver) ([]*Element, error) {
 	op := &Command{
-		Path:   "/elements",
+		Path:   PathElementsFind,
 		Method: http.MethodPost,
 		Data: marshalData(&JsonFindUsing{
 			Using: by.Using,
