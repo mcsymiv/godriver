@@ -9,7 +9,7 @@ import (
 
 func from(by by.Selector, e *Element) (*Element, error) {
 	op := &Command{
-		Path:           PathFromElement,
+		Path:           PathElementFromElement,
 		PathFormatArgs: []any{e.Id},
 		Method:         http.MethodPost,
 		Data: marshalData(&JsonFindUsing{
@@ -50,7 +50,7 @@ func (e *Element) From(s string) *Element {
 
 func (e *Element) Froms(by by.Selector) []*Element {
 	op := &Command{
-		Path:           PathFromElements,
+		Path:           PathElementsFromElement,
 		PathFormatArgs: []any{e.Id},
 		Method:         http.MethodPost,
 		Data: marshalData(&JsonFindUsing{

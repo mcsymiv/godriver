@@ -12,9 +12,7 @@ func (d *Driver) F(selector string) *Element {
 
 	el, err := find(w3cBy, d)
 	if err != nil {
-		return &Element{
-			ElementError: fmt.Errorf("unable to find element, got: %v", err),
-		}
+		panic(fmt.Errorf("unable to find element, got: %v", err))
 	}
 
 	return el

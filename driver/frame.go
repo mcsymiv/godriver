@@ -12,7 +12,7 @@ func newFrameCommand(el *Element) *Command {
 	}
 
 	return &Command{
-		Path:   PathFrame, 
+		Path:   PathDriverFrame, 
 		Method: http.MethodPost,
 		Data: marshalData(map[string]interface{}{
 			"id": elFrameId,

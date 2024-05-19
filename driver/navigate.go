@@ -6,7 +6,7 @@ import (
 
 func (d *Driver) Url(u string) *Driver {
 	_, err := d.Client.ExecuteCmd(&Command{
-		Path:   "/url",
+		Path:   PathDriverUrl,
 		Method: http.MethodPost,
 		Data:   marshalData(map[string]string{"url": u}),
 	})
@@ -20,7 +20,7 @@ func (d *Driver) Url(u string) *Driver {
 
 func (d Driver) Open(u string) {
 	d.Client.ExecuteCmd(&Command{
-		Path:   "/url",
+		Path:   PathDriverUrl,
 		Method: http.MethodPost,
 		Data:   marshalData(map[string]string{"url": u}),
 	})
@@ -35,7 +35,7 @@ func (d *Driver) OpenInNewTab(u string) {
 
 func (d Driver) Refresh() {
 	d.Client.ExecuteCmd(&Command{
-		Path:   "/refresh",
+		Path:   PathDriverRefresh,
 		Method: http.MethodPost,
 		Data:   marshalData(&Empty{}),
 	})
@@ -43,7 +43,7 @@ func (d Driver) Refresh() {
 
 func (d *Driver) NewTab() {
 	d.Client.ExecuteCmd(&Command{
-		Path:   "/window/new",
+		Path:   PathDriverWindowNew,
 		Method: http.MethodPost,
 		Data:   marshalData(&Empty{}),
 	})
@@ -55,7 +55,7 @@ func (d *Driver) SwitchToTab(n int) {
 	h := getTabs(d)
 
 	d.Client.ExecuteCmd(&Command{
-		Path:   "/window",
+		Path:   PathDriverWindow,
 		Method: http.MethodPost,
 		Data:   marshalData(map[string]string{"handle": h[n]}),
 	})
@@ -65,7 +65,7 @@ func (d *Driver) Tab(n int) *Driver {
 	h := getTabs(d)
 
 	_, err := d.Client.ExecuteCmd(&Command{
-		Path:   "/window",
+		Path:   PathDriverWindow,
 		Method: http.MethodPost,
 		Data:   marshalData(map[string]string{"handle": h[n]}),
 	})
@@ -81,7 +81,7 @@ func getTabs(d *Driver) []string {
 	h := new(struct{ Value []string })
 
 	_, err := d.Client.ExecuteCmd(&Command{
-		Path:   "/window/handles",
+		Path:  PathDriverWindowHandles,
 		Method: http.MethodGet,
 	}, h)
 

@@ -65,9 +65,9 @@ func DefaultCapabilities() Capabilities {
 			AlwaysMatch{
 				AcceptInsecureCerts: true,
 				BrowserName:         "firefox",
-				PageLoad:            "normal",
+				PageLoad:            "eager",
 				Timeouts: Timeouts{
-					Implicit: 10000,
+					Implicit: 30000,
 				},
 			},
 		},

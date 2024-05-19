@@ -13,17 +13,23 @@ import (
 )
 
 const (
-	PathFrame            = "/frame"
-	PathElementFind      = "/element"
-	PathElementsFind     = "/elements"
-	PathElementActive    = "/element/active"
-	PathElementDisplayed = "/element/%s/displayed"
-	PathElementClear     = "/element/%s/clear"
-	PathElementValue     = "/element/%s/value"
-	PathFromElement      = "/element/%s/element"
-	PathFromElements     = "/element/%s/elements"
-	PathElementAttribute = "/element/%s/attribute/%s"
-	PathElementClick     = "/element/%s/click"
+	PathDriverUrl           = "/url"
+	PathDriverFrame         = "/frame"
+	PathDriverRefresh       = "/refresh"
+	PathDriverWindow        = "/windown"
+	PathDriverWindowNew     = "/windown/new"
+	PathDriverWindowHandles = "/windown/handles"
+
+	PathElementFind         = "/element"
+	PathElementsFind        = "/elements"
+	PathElementActive       = "/element/active"
+	PathElementDisplayed    = "/element/%s/displayed"
+	PathElementClear        = "/element/%s/clear"
+	PathElementValue        = "/element/%s/value"
+	PathElementFromElement  = "/element/%s/element"
+	PathElementsFromElement = "/element/%s/elements"
+	PathElementAttribute    = "/element/%s/attribute/%s"
+	PathElementClick        = "/element/%s/click"
 )
 
 type Driver struct {

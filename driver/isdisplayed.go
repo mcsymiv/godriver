@@ -5,40 +5,15 @@ import (
 	"net/http"
 )
 
-// IsDisplayed
-func (e *Element) IsDisplayed() *Element {
-
-	if e.ElementError != nil {
-		return &Element{
-			ElementError: fmt.Errorf("displayed element got error: %v", e.ElementError),
-		}
-	}
-
-	dis, err := isDisplayed(e)
-	if err != nil {
-		return &Element{
-			ElementError: fmt.Errorf("displayed got: %v", err),
-		}
-	}
-
-	if !dis {
-		return &Element{
-			ElementError: fmt.Errorf("element is NOT displayed got: %v", dis),
-		}
-	}
-
-	return e
-}
-
 // Is("displayed")
+// returns chained Element
+// can seat in between element commands
+// e.g.: d.F("selector").Is().Attr("href")
+// will panic if found elemet is not displayed
 func (e *Element) Is() *Element {
-	dis, err := isDisplayed(e)
+	err := isDisplayed(e)
 	if err != nil {
-		return nil
-	}
-
-	if !dis {
-		return nil
+		panic(fmt.Errorf("got: %v\n", err))
 	}
 
 	return e
@@ -47,33 +22,26 @@ func (e *Element) Is() *Element {
 // newDisplayCommand
 // referrences find elememnt cmd
 func newDisplayCommand(e *Element) *Command {
-	fCommand := newFindCommand(e.Selector, e.Driver)
-	fReq, _ := newCommandRequest(e.Client, fCommand)
-
 	return &Command{
-		Path:           "/element/%s/displayed",
+		Path:           PathElementDisplayed,
 		PathFormatArgs: []any{e.Id},
 		Method:         http.MethodGet,
 
 		Strategies: []CommandExecutor{
 			&displayStrategy{
-				Driver:  e.Driver,
-				findReq: fReq,
-				timeout: 8,
-				delay:   800,
+				Driver: e.Driver,
 			},
 		},
 	}
 }
 
-func isDisplayed(e *Element) (bool, error) {
+func isDisplayed(e *Element) error {
 	op := newDisplayCommand(e)
 
-	d := new(struct{ Value bool })
-	_, err := e.Client.ExecuteCmd(op, d)
+	_, err := e.Client.ExecuteCmd(op)
 	if err != nil {
-		return false, fmt.Errorf("error on display: %v", err)
+		return fmt.Errorf("error on display: %v\n", err)
 	}
 
-	return d.Value, nil
+	return nil
 }
