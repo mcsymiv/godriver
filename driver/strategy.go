@@ -1,8 +1,9 @@
 package driver
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"time"
@@ -12,10 +13,6 @@ import (
 
 type findStrategy struct {
 	driver *Driver
-	*http.Client
-
-	timeout time.Duration
-	delay   time.Duration
 }
 
 func newFindStrategy(d *Driver) *findStrategy {
@@ -24,143 +21,127 @@ func newFindStrategy(d *Driver) *findStrategy {
 	}
 }
 
-func (cl findStrategy) Exec(r *buffRequest) (*buffResponse, error) {
-	return nil, nil
-}
-
-func drainBody(resp *http.Response) {
-	if resp.Body != nil {
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
-	}
-}
-
-func copyReqBody(req *http.Request) *http.Request {
-	rUse := ReusableReader(req.Body)
-	rr := io.LimitReader(rUse, 4096)
-	reqBody := io.NopCloser(rr)
-	// req.Body = reqBody
-
-	req2, err := http.NewRequest(req.Method, req.URL.String(), reqBody)
-	if err != nil {
-		log.Println("unable to copy request: %v", err)
+func (f *findStrategy) exec(cmd *Command, any interface{}) {
+	var cPath string = cmd.Path
+	if len(cmd.PathFormatArgs) != 0 {
+		cPath = fmt.Sprintf(cmd.Path, cmd.PathFormatArgs...)
 	}
 
-	return req2
-}
+	url := fmt.Sprintf("%s%s", f.driver.Client.BaseURL, cPath)
+	start := time.Now()
+	end := start.Add(config.TestSetting.TimeoutFind * time.Second)
 
-// Execute
-// findStrategy impl
-// retries find command with delay until element is returned
-// or timeout reached, which takes a screenshot of the page
-func (f *findStrategy) Execute(req *http.Request) (*http.Response, error) {
-	var res *http.Response
-	var err error
-
-	req = copyReqBody(req)
-	res, err = f.driver.Client.HTTPClient.Do(req)
-
-	if res.StatusCode == http.StatusNotFound {
-		log.Printf("element not fount: %v", res.StatusCode)
-
-		start := time.Now()
-		end := start.Add(config.TestSetting.TimeoutFind * time.Second)
-
-		for {
-			log.Println("find retry")
-			time.Sleep(config.TestSetting.TimeoutDelay * time.Millisecond)
-
-			drainBody(res)
-			res, err = f.driver.Client.HTTPClient.Do(req)
-			if err != nil {
-				log.Println("error on client request", err)
-				err = fmt.Errorf("error on find retry: %v", err)
-				break
-			}
-
-			if res.StatusCode == http.StatusOK {
-				break
-			}
-
-			if time.Now().After(end) {
-
-				if config.TestSetting.ScreenshotOnFail {
-					f.driver.Screenshot()
-				}
-
-				err = fmt.Errorf("unable to find element with %v timeout: %v", config.TestSetting.TimeoutFind, err)
-				break
-			}
-
-			if config.TestSetting.RefreshOnFindError {
-				f.driver.Refresh()
-			}
+	for {
+		req, err := http.NewRequest(cmd.Method, url, bytes.NewBuffer(cmd.Data))
+		if err != nil {
+			log.Println("error on NewRequest")
+			panic(err)
 		}
+
+		res, err := f.driver.Client.HTTPClient.Do(req)
+		if err != nil {
+			log.Println("error on Client Do Request")
+			panic(err)
+		}
+
+		if res.StatusCode == http.StatusOK {
+			err = json.NewDecoder(res.Body).Decode(any)
+			if err != nil {
+				log.Println("error on json NewDecoder")
+				panic(err)
+			}
+
+			break
+		}
+
+		if time.Now().After(end) {
+
+			if config.TestSetting.ScreenshotOnFail {
+				f.driver.Screenshot()
+			}
+
+			break
+		}
+
+		log.Println("retry find element")
 	}
-
-	return res, err
-}
-
-type clickStrategy struct {
-	*http.Client
-}
-
-// click strategy
-// note: return default client click request as example
-// TODO: add strategy for ElementNotFound, ClickIntercepted etc
-func (cl clickStrategy) Execute(req *http.Request) (*http.Response, error) {
-	return cl.Client.Do(req)
-}
-
-func (cl clickStrategy) Exec(r *buffRequest) (*buffResponse, error) {
-	return nil, nil
 }
 
 type displayStrategy struct {
 	*Driver
 }
 
-func (dis displayStrategy) Exec(r *buffRequest) (*buffResponse, error) {
-	return nil, nil
-}
-
-func (dis displayStrategy) Execute(req *http.Request) (*http.Response, error) {
-	var displayRes = new(struct{ Value bool })
-	var res *http.Response
-
-	res, err := dis.Driver.Client.HTTPClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error on is display request")
+func (f *displayStrategy) exec(cmd *Command, any interface{}) {
+	var displayResponse = new(struct{ Value bool })
+	var cPath string = cmd.Path
+	if len(cmd.PathFormatArgs) != 0 {
+		cPath = fmt.Sprintf(cmd.Path, cmd.PathFormatArgs...)
 	}
 
+	url := fmt.Sprintf("%s%s", f.Client.BaseURL, cPath)
 	start := time.Now()
 	end := start.Add(config.TestSetting.TimeoutFind * time.Second)
 
 	for {
-		time.Sleep(config.TestSetting.TimeoutDelay * time.Millisecond)
+		req, err := http.NewRequest(cmd.Method, url, bytes.NewBuffer(cmd.Data))
+		if err != nil {
+			log.Println("error on NewRequest")
+			panic(err)
+		}
+
+		res, err := f.Client.HTTPClient.Do(req)
+		if err != nil {
+			log.Println("error on Client Do Request")
+			panic(err)
+		}
 
 		if res.StatusCode == http.StatusOK {
-			err = unmarshalRes(res, displayRes)
+
+			err = json.NewDecoder(res.Body).Decode(displayResponse)
 			if err != nil {
-				return nil, fmt.Errorf("error on unmarshal display body, got: %v", err)
+				log.Println("error on json NewDecoder")
+				panic(err)
 			}
 
-			if displayRes.Value {
-				return res, nil
+			if displayResponse.Value {
+				break
 			}
 		}
 
 		if time.Now().After(end) {
+
 			if config.TestSetting.ScreenshotOnFail {
-				dis.Screenshot()
+				f.Screenshot()
 			}
 
-			return nil, fmt.Errorf("element not displayed within %v timeout, got: %v", config.TestSetting.TimeoutFind, err)
+			break
 		}
 
-		res, err = dis.Driver.Client.HTTPClient.Do(req)
-		if err != nil {
-			return nil, fmt.Errorf("error on display request")
-		}
+		log.Println("retry find element")
+	}
+}
+
+type clickStrategy struct {
+	*Driver
+}
+
+func (f *clickStrategy) exec(cmd *Command, any interface{}) {
+	var cPath string = cmd.Path
+	if len(cmd.PathFormatArgs) != 0 {
+		cPath = fmt.Sprintf(cmd.Path, cmd.PathFormatArgs...)
+	}
+
+	url := fmt.Sprintf("%s%s", f.Driver.Client.BaseURL, cPath)
+
+	req, err := http.NewRequest(cmd.Method, url, bytes.NewBuffer(cmd.Data))
+	if err != nil {
+		log.Println("error on NewRequest")
+		panic(err)
+	}
+
+	_, err = f.Driver.Client.HTTPClient.Do(req)
+	if err != nil {
+		log.Println("error on Client Do Request")
+		panic(err)
 	}
 }

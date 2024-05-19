@@ -10,9 +10,9 @@ import (
 func (d *Driver) F(selector string) *Element {
 	w3cBy := by.Strategy(selector)
 
-	el, err := find(w3cBy, d)
+	el, err := f(w3cBy, d)
 	if err != nil {
-		panic(fmt.Errorf("unable to find element, got: %v", err))
+		panic(fmt.Errorf("unable to find element, got: %v\n", err))
 	}
 
 	return el

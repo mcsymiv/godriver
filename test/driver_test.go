@@ -53,7 +53,9 @@ func TestNewAccount(t *testing.T) {
 }
 
 func TestDriver(t *testing.T) {
-	d, tear := Driver()
+	d, tear := Driver(
+		capabilities.HeadLess(),
+	)
 	defer tear()
 
 	repo := "/repository/download/"
@@ -76,11 +78,10 @@ func TestDriver(t *testing.T) {
 	}
 
 	d.Url(fmt.Sprintf("%s%s", host, "/login.html"))
-	d.F("Log in using Azure Active Directory").Is().Click()
-	d.F("[id='i0116']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
-	d.F("[id='i0118']").Key(os.Getenv("DOWNLOAD_PASS"))
-	d.F("//*[@value='Увійти']").Click()
-	d.F("Так").Click()
+	d.F("Log in using Azure Active Directory").Click()
+	d.F("[aria-label^='Ending with']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
+	d.F("[aria-label^='Enter the password']").Key(os.Getenv("DOWNLOAD_PASS")).Key(driver.EnterKey)
+	d.F("Yes").Click()
 	d.F("Projects").Click()
 	d.F("[id='search-projects']").Key(testEnv)
 

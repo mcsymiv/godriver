@@ -40,6 +40,7 @@ type logginRoundTripper struct {
 func (l logginRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	res, err := l.next.RoundTrip(r)
 	if err != nil {
+		log.Println("error on request", err)
 		return nil, fmt.Errorf("error on %v request: %v", r, err)
 	}
 

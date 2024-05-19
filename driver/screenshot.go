@@ -35,7 +35,7 @@ func screenshot(d *Driver) error {
 	op := newScreenShotCommand()
 
 	data := new(struct{ Value string })
-	d.Client.ExecuteCmd(op, data)
+	d.Client.ExecuteCommand(op, data)
 
 	decodedImage, err := base64.StdEncoding.DecodeString(data.Value)
 	if err != nil {

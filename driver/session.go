@@ -65,5 +65,5 @@ func (d Driver) Quit() {
 		Method: http.MethodDelete,
 	}
 
-	d.Client.ExecuteCmd(q)
+	d.Client.ExecuteCommand(q, nil)
 }

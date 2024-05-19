@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -69,13 +68,8 @@ func executeScriptSync(d Driver, script string, args ...interface{}) (interface{
 		}),
 	}
 
-	bRes, err := d.Client.ExecuteCmd(op)
-	if err != nil {
-		return nil, fmt.Errorf("error on executeScript command: %v", err)
-	}
-
 	rr := new(struct{ Value interface{} })
-	unmarshalResponses(bRes, rr)
+	d.Client.ExecuteCommand(op, rr)
 
 	return rr.Value, nil
 }
