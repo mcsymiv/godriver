@@ -25,7 +25,7 @@ func (d Driver) Open(u string) {
 func (d *Driver) OpenInNewTab(u string) {
 	d.NewTab()
 	tNum := getTabs(d)
-	d.SwitchToTab(len(tNum) - 1)
+	d.Tab(len(tNum) - 1)
 	d.Open(u)
 }
 
@@ -47,16 +47,6 @@ func (d *Driver) NewTab() {
 
 // SwitchToTab
 // Swiches context to N tab in browser, where 0 is first tab
-func (d *Driver) SwitchToTab(n int) {
-	h := getTabs(d)
-
-	d.Client.ExecuteCommand(&Command{
-		Path:   PathDriverWindow,
-		Method: http.MethodPost,
-		Data:   marshalData(map[string]string{"handle": h[n]}),
-	}, nil)
-}
-
 func (d *Driver) Tab(n int) *Driver {
 	h := getTabs(d)
 

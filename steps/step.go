@@ -32,7 +32,7 @@ func (ts *Test) Cl(arg string) *driver.Element {
 			t.Fatal("unable to find element")
 		}
 
-		el = el.IsDisplayed()
+		el = el.Is()
 		if el == nil {
 			t.Fatal("element not displayed")
 		}
@@ -53,7 +53,7 @@ func (ts *Test) Is(name string, arg string) {
 			t.Fatal("unable to find element")
 		}
 
-		el = el.IsDisplayed()
+		el = el.Is()
 		if el == nil {
 			t.Fatal("element not displayed")
 		}

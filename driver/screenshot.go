@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/mcsymiv/godriver/config"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -26,7 +28,7 @@ func randSeq(n int) string {
 
 func newScreenShotCommand() *Command {
 	return &Command{
-		Path:   "/screenshot",
+		Path:   PathDriverScreenshot,
 		Method: http.MethodGet,
 	}
 }
@@ -49,9 +51,8 @@ func screenshot(d *Driver) error {
 	}
 
 	// Create a new file for the output JPEG image
-	// TODO:	remove hardcoded artifact path
-	// 				upd randSeq, use meaninful screenshot name
-	outputFile, err := os.Create(fmt.Sprintf("../artifacts/screenshots/%s_%s.jpg", randSeq(8), time.Now().Format("2006_01_02_15:04:05")))
+	// TODO: upd randSeq, use meaninful screenshot name
+	outputFile, err := os.Create(fmt.Sprintf("%s/%s_%s.jpg", config.TestSetting.ArtifactScreenshotsPath, randSeq(8), time.Now().Format("2006_01_02_15:04:05")))
 	if err != nil {
 		return fmt.Errorf("error on create file: %v", err)
 	}

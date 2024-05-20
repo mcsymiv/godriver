@@ -29,6 +29,21 @@ type Setting struct {
 	// calls /session/{sessionId}/refresh
 	// if find retry fails
 	RefreshOnFindError bool
+
+	// Artifact path
+	// 
+	// ArtifactRecordsPath
+	// from app root a directory that stores
+	// Google Chrome Recorder json files
+	// for TestSteps generation
+	// will check specified path for *.json records
+	ArtifactRecordsPath string
+
+	// ArtifactScreenshotsPath
+	// from app root a directory where
+	// ScreenshotOnFail, or d.Screenshot()
+	// stores driver screnshots in *.jpg format
+	ArtifactScreenshotsPath string
 }
 
 func DefaultSetting() *Setting {
@@ -37,6 +52,7 @@ func DefaultSetting() *Setting {
 		TimeoutFind:        30,
 		TimeoutDelay:       700,
 		RefreshOnFindError: true,
+		ArtifactRecordsPath: "../artifacts/records",
 	}
 }
 

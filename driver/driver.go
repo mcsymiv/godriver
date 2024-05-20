@@ -19,6 +19,7 @@ const (
 	PathDriverWindow        = "/windown"
 	PathDriverWindowNew     = "/windown/new"
 	PathDriverWindowHandles = "/windown/handles"
+	PathDriverScreenshot    = "/screenshot"
 
 	PathElementFind         = "/element"
 	PathElementsFind        = "/elements"
