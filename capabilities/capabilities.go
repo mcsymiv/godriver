@@ -35,9 +35,10 @@ type ChromeOptions struct {
 }
 
 type MozOptions struct {
-	Profile string   `json:"profile,omitempty"`
-	Binary  string   `json:"binary,omitempty"`
-	Args    []string `json:"args,omitempty"`
+	Profile string            `json:"profile,omitempty"`
+	Binary  string            `json:"binary,omitempty"`
+	Args    []string          `json:"args,omitempty"`
+	Prefs   map[string]string `json:"prefs,omitempty"`
 	Log     `json:"log,omitempty"`
 }
 
@@ -120,5 +121,11 @@ func Port(p string) CapabilitiesFunc {
 func Host(h string) CapabilitiesFunc {
 	return func(caps *Capabilities) {
 		caps.DriverSetupCapabilities.Host = h
+	}
+}
+
+func MozPrefs(k, v string) CapabilitiesFunc {
+	return func(caps *Capabilities) {
+		caps.Capabilities.MozOptions.Prefs = map[string]string{k: v}
 	}
 }

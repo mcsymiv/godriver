@@ -54,7 +54,7 @@ func TestNewAccount(t *testing.T) {
 
 func TestDriver(t *testing.T) {
 	d, tear := Driver(
-		capabilities.HeadLess(),
+		capabilities.MozPrefs("intl.accept_languages", "en-GB"),
 	)
 	defer tear()
 
