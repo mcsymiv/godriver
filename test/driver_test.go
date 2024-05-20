@@ -1,7 +1,6 @@
 package test
 
 import (
-	// "fmt"
 	"fmt"
 	"log"
 	"os"
@@ -12,45 +11,6 @@ import (
 	"github.com/mcsymiv/godriver/capabilities"
 	"github.com/mcsymiv/godriver/driver"
 )
-
-func TestDeleteAccount(t *testing.T) {
-	d, tear := Driver()
-	defer tear()
-
-	d.Url(os.Getenv("SUB_ENVIRONMENT_01"))
-	loginOkta(d)
-
-	d.F("//*[contains(@class, 'pagination_pageSize')]").Click()
-	d.F("200").Click()
-
-	acc := "qa-dev01-135319"
-
-	d.F(fmt.Sprintf("//*[text()='%s']/..//*[@data-qa-id='delete']", acc)).Click()
-	d.F("//*[text()='Confirm Delete']/../..//input").Key(acc)
-	d.F("Yes").Click()
-}
-
-func TestNewAccount(t *testing.T) {
-	d, tear := Driver(
-		capabilities.HeadLess(),
-	)
-	defer tear()
-
-	d.Url(os.Getenv("SUB_ENVIRONMENT"))
-	loginOkta(d)
-
-	acc := "qa-dev-yellow2-136117"
-
-	d.F("Add Account").Click()
-	d.F("Customer Name *").Click().Active().Key(acc)
-	d.F("System Name *").Click().Active().Key(acc)
-	d.F("Sub Domain *").Click().Active().Key(acc)
-	// d.FindText("Built-in Authentication").Clickick()
-
-	d.F("SMB").Click()
-	d.F("Enterprise").Click()
-	d.F("Create").Click()
-}
 
 func TestDriver(t *testing.T) {
 	d, tear := Driver(
