@@ -15,7 +15,6 @@ type Client struct {
 	HTTPClient         *http.Client
 	RequestReaderLimit int64
 	// syncMutex  sync.Mutex // Mutex for ensuring thread safety
-	DefaultExecuteStrategy CommandExecutor
 }
 
 // newClientV2

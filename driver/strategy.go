@@ -41,6 +41,7 @@ func (f *findStrategy) exec(cmd *Command, any interface{}) {
 		res, err := f.driver.Client.HTTPClient.Do(req)
 		if err != nil {
 			log.Println("error on Client Do Request")
+			res.Body.Close()
 			panic(err)
 		}
 
@@ -51,12 +52,13 @@ func (f *findStrategy) exec(cmd *Command, any interface{}) {
 				panic(err)
 			}
 
+			res.Body.Close()
 			break
 		}
 
 		res.Body.Close()
 
-		if time.Now().After(end) {
+		if start.After(end) {
 
 			if config.TestSetting.ScreenshotOnFail {
 				f.driver.Screenshot()
@@ -94,26 +96,27 @@ func (f *displayStrategy) exec(cmd *Command, any interface{}) {
 		res, err := f.Client.HTTPClient.Do(req)
 		if err != nil {
 			log.Println("error on Client Do Request")
+			res.Body.Close()
 			panic(err)
 		}
 
 		if res.StatusCode == http.StatusOK {
-
 			err = json.NewDecoder(res.Body).Decode(displayResponse)
 			if err != nil {
 				log.Println("error on json NewDecoder")
+				res.Body.Close()
 				panic(err)
 			}
 
 			if displayResponse.Value {
+				res.Body.Close()
 				break
 			}
 		}
 
 		res.Body.Close()
 
-		if time.Now().After(end) {
-
+		if start.After(end) {
 			if config.TestSetting.ScreenshotOnFail {
 				f.Screenshot()
 			}
