@@ -58,7 +58,7 @@ func (f *findStrategy) exec(cmd *Command, any interface{}) {
 
 		res.Body.Close()
 
-		if start.After(end) {
+		if time.Now().After(end) {
 
 			if config.TestSetting.ScreenshotOnFail {
 				f.driver.Screenshot()
@@ -116,7 +116,7 @@ func (f *displayStrategy) exec(cmd *Command, any interface{}) {
 
 		res.Body.Close()
 
-		if start.After(end) {
+		if time.Now().After(end) {
 			if config.TestSetting.ScreenshotOnFail {
 				f.Screenshot()
 			}

@@ -31,7 +31,7 @@ type Setting struct {
 	RefreshOnFindError bool
 
 	// Artifact path
-	// 
+	//
 	// ArtifactRecordsPath
 	// from app root a directory that stores
 	// Google Chrome Recorder json files
@@ -48,10 +48,10 @@ type Setting struct {
 
 func DefaultSetting() *Setting {
 	return &Setting{
-		ScreenshotOnFail:   true,
-		TimeoutFind:        30,
-		TimeoutDelay:       700,
-		RefreshOnFindError: true,
+		ScreenshotOnFail:    true,
+		TimeoutFind:         15,
+		TimeoutDelay:        700,
+		RefreshOnFindError:  true,
 		ArtifactRecordsPath: "../artifacts/records",
 	}
 }
