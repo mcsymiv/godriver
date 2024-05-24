@@ -31,7 +31,7 @@ func (d *Driver) TryF(selectors []string) *Element {
 	for _, s := range selectors {
 		w3cBy := by.Strategy(s)
 
-		el, err := find(w3cBy, d)
+		el, err := f(w3cBy, d)
 		if err != nil {
 			return nil
 		}
@@ -45,56 +45,8 @@ func (d *Driver) TryF(selectors []string) *Element {
 	return el
 }
 
-func (d *Driver) Fs(selector string) *Element {
+func (d *Driver) Fs(selector string) []*Element {
 	w3cBy := by.Css(selector)
-
-	el, err := find(w3cBy, d)
-	if err != nil {
-		return nil
-	}
-
-	return el
-}
-
-// Find
-func (d *Driver) Find(selector string) *Element {
-	w3cBy := by.Selector{
-		Value: selector,
-		Using: by.DefineStrategy(selector),
-	}
-
-	el, err := find(w3cBy, d)
-	if err != nil {
-		return nil
-	}
-	return el
-}
-
-// FindText
-func (d *Driver) FindText(value string) *Element {
-	w3cBy := by.Text(value)
-
-	el, err := find(w3cBy, d)
-	if err != nil {
-		return nil
-	}
-	return el
-}
-
-// Find by w3c selector strategy
-func (d *Driver) FindElement(by by.Selector) *Element {
-	el, err := find(by, d)
-	if err != nil {
-		return nil
-	}
-	return el
-}
-
-func (d *Driver) Finds(selector string) []*Element {
-	w3cBy := by.Selector{
-		Value: selector,
-		Using: by.DefineStrategy(selector),
-	}
 
 	el, err := finds(w3cBy, d)
 	if err != nil {

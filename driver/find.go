@@ -6,38 +6,6 @@ import (
 	"github.com/mcsymiv/godriver/by"
 )
 
-// newFindCommand
-// returns default values for
-// /element command to execute
-func newFindCommand(by by.Selector, d *Driver) *Command {
-
-	return &Command{
-		Path:   PathElementFind,
-		Method: http.MethodPost,
-		Data: marshalData(&JsonFindUsing{
-			Using: by.Using,
-			Value: by.Value,
-		}),
-
-		Strategy: newFindStrategy(d),
-	}
-}
-
-func find(b by.Selector, d *Driver) (*Element, error) {
-	op := newFindCommand(b, d)
-
-	el := new(struct{ Value map[string]string })
-	d.Client.ExecuteCommand(op, el)
-
-	eId := elementID(el.Value)
-
-	return &Element{
-		Id:       eId,
-		Driver:   d,
-		Selector: b,
-	}, nil
-}
-
 func f(b by.Selector, d *Driver) (*Element, error) {
 	el := new(struct{ Value map[string]string })
 	d.Client.ExecuteCommand(&Command{

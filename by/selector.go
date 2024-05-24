@@ -19,14 +19,6 @@ type Selector struct {
 	Using, Value string
 }
 
-func DefineStrategy(s string) string {
-	if strings.Contains(s, "/") {
-		return ByXPath
-	}
-
-	return ByCssSelector
-}
-
 // checkSubstrings
 // wrapper around strings.Contains
 // to check multiple substrings
@@ -59,7 +51,7 @@ func checkSubstrings(str string, subs ...string) (bool, int) {
 // as final option, if selector does not contain /, [ symbols
 // XPathTextStrategy will be used
 func Strategy(value string) Selector {
-	if value[0] == '/' || strings.Contains(value, "/") {
+	if value[0] == '/' || value[1] == '/' || strings.Contains(value, "/") {
 		return Selector{
 			Value: value,
 			Using: ByXPath,
