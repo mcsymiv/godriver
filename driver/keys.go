@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -69,23 +68,25 @@ const (
 )
 
 func (el *Element) Key(s string) *Element {
-	el.Client.ExecuteCmd(&Command{
-		Path:   fmt.Sprintf("/element/%s/value", el.Id),
-		Method: http.MethodPost,
+	el.Client.ExecuteCommand(&Command{
+		Path:           PathElementValue,
+		PathFormatArgs: []any{el.Id},
+		Method:         http.MethodPost,
 		Data: marshalData(&SendKeys{
 			Text: s,
 		}),
-	})
+	}, nil)
 
 	return el
 }
 
 func (el *Element) Clear() *Element {
-	el.Client.ExecuteCmd(&Command{
-		Path:   fmt.Sprintf("/element/%s/clear", el.Id),
-		Method: http.MethodPost,
-		Data:   marshalData(&Empty{}),
-	})
+	el.Client.ExecuteCommand(&Command{
+		Path:           PathElementClear,
+		PathFormatArgs: []any{el.Id},
+		Method:         http.MethodPost,
+		Data:           marshalData(&Empty{}),
+	}, nil)
 
 	return el
 }

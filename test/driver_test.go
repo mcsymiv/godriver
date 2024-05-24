@@ -1,8 +1,8 @@
 package test
 
 import (
-	// "fmt"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -12,47 +12,10 @@ import (
 	"github.com/mcsymiv/godriver/driver"
 )
 
-func TestDeleteAccount(t *testing.T) {
-	d, tear := Driver()
-	defer tear()
-
-	d.Url(os.Getenv("SUB_ENVIRONMENT_01"))
-	loginOkta(d)
-
-	d.F("//*[contains(@class, 'pagination_pageSize')]").Click()
-	d.F("200").Click()
-
-	acc := "qa-dev01-135319"
-
-	d.F(fmt.Sprintf("//*[text()='%s']/..//*[@data-qa-id='delete']", acc)).Click()
-	d.F("//*[text()='Confirm Delete']/../..//input").Key(acc)
-	d.F("Yes").Click()
-}
-
-func TestNewAccount(t *testing.T) {
-	d, tear := Driver(
-		capabilities.HeadLess(),
-	)
-	defer tear()
-
-	d.Url(os.Getenv("SUB_ENVIRONMENT"))
-	loginOkta(d)
-
-	acc := "qa-dev-yellow2-136117"
-
-	d.F("Add Account").Click()
-	d.F("Customer Name *").Click().Active().Key(acc)
-	d.F("System Name *").Click().Active().Key(acc)
-	d.F("Sub Domain *").Click().Active().Key(acc)
-	// d.FindText("Built-in Authentication").Clickick()
-
-	d.F("SMB").Click()
-	d.F("Enterprise").Click()
-	d.F("Create").Click()
-}
-
 func TestDriver(t *testing.T) {
-	d, tear := Driver()
+	d, tear := Driver(
+		capabilities.MozPrefs("intl.accept_languages", "en-GB"),
+	)
 	defer tear()
 
 	repo := "/repository/download/"
@@ -75,21 +38,22 @@ func TestDriver(t *testing.T) {
 	}
 
 	d.Url(fmt.Sprintf("%s%s", host, "/login.html"))
-	d.F("Log in using Azure Active Directory").Is().Click()
-	d.F("[id='i0116']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
-	d.F("[id='i0118']").Key(os.Getenv("DOWNLOAD_PASS"))
-	d.F("Sign in").Is().Click()
-	d.F("Yes").Is().Click()
-	d.F("Projects").Is().Click()
-	d.F("[id='search-projects']").Is().Key(testEnv)
+	d.F("Log in using Azure Active Directory").Click()
+	d.F("[aria-label^='Ending with']").Key(os.Getenv("DOWNLOAD_LOGIN")).Key(driver.EnterKey)
+	d.F("[aria-label^='Enter the password']").Key(os.Getenv("DOWNLOAD_PASS")).Key(driver.EnterKey)
+	d.F("Yes").Click()
+	d.F("Projects").Click()
+	d.F("[id='search-projects']").Key(testEnv)
 
 	for _, sName := range sNames {
-		// d.Find(fmt.Sprintf("//aside//span[contains(text(),'%s')]", sName)).IsDisplayed().Clickick()
-		d.F("//*[@data-test='sidebar']").From(sName).Is().Click()
+		log.Println(sName)
+		d.F(fmt.Sprintf("//*[@data-test='sidebar']//span[contains(text(),'%s')]", sName)).Is().Click()
+		d.F(fmt.Sprintf("//h1//*[text()='%s']", sName)).Is()
 
-		buildLinkRaw := d.F("(//*[@data-grid-root='true']//*[@data-test='ring-link'])[1]").Is().Attr("href")
+		buildLinkRaw := d.F("(//*[@data-grid-root='true']//*[@data-test='ring-link'])[1]").Attr("href")
 		buildLink := strings.Join(strings.Split(buildLinkRaw, "/")[2:], "/")
 
+		log.Println(buildLink)
 		rLinks = append(rLinks, fmt.Sprintf("%s%s%s%s", host, repo, buildLink, allure))
 	}
 

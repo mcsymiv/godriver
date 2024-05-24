@@ -3,15 +3,12 @@ package driver
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"net/http"
 )
 
-// type WrapCommand func(CommandHandler) CommandHandler
-
-// type CommandHandler func(*http.Request) (*http.Response, error)
-
-// Route represents a specific API route and its handler function.
+// Command
+// represents a request (command) to webdriver
+// with added Strategies to execute in CommandExecutor
 type Command struct {
 	Path           string
 	Method         string
@@ -20,13 +17,17 @@ type Command struct {
 	Data         []byte
 	ResponseData interface{}
 
-	Strategies []CommandExecutor
+	Strategy CommandExecutor
 }
 
+// CommandExecutor
 // strategy to remove duplicates in execute Command/Request
 type CommandExecutor interface {
-	Execute(req *http.Request) (*http.Response, error)
-	Exec(r *buffRequest) (*buffResponse, error) // TODO: Exec wrapper around req/res
+
+	// TODO: Exec wrapper around req/res
+	// Exec(r *buffRequest) (*buffResponse, error)
+
+	exec(*Command, interface{})
 }
 
 // Context
@@ -34,58 +35,8 @@ type CommandStrategy struct {
 	CommandExecutor
 }
 
-type buffResponse struct {
-	*http.Response
-	buff  []byte
-	bRead func() io.ReadCloser // callback when response with body required
-}
-
-type buffRequest struct {
-	*http.Request
-	bRead func() io.ReadCloser
-}
-
-type executorContext struct {
-	cmds []CommandExecutor
-	bufs []*buffResponse
-}
-
-// newExecutorContext
-// creates new CommandExecutor out of defaul client
-// or from passed in command strategies
-// allocates space for buffered command response
-func newExecutorContext(c *Client, cmd *Command) *executorContext {
-	var executorCtx *executorContext = &executorContext{
-		cmds: []CommandExecutor{c},
-		bufs: make([]*buffResponse, 1),
-	}
-
-	if len(cmd.Strategies) > 0 {
-		executorCtx.cmds = cmd.Strategies
-		executorCtx.bufs = make([]*buffResponse, len(cmd.Strategies))
-	}
-
-	return executorCtx
-}
-
-// newBuffResponse
-// reusable response for multiple reads
-func newBuffResponse(response *http.Response) (*buffResponse, error) {
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error on read all body response: %v", err)
-	}
-
-	buffRes := &buffResponse{
-		buff:     body,
-		Response: response,
-		bRead: func() io.ReadCloser {
-			rr := io.LimitReader(ReusableReader(bytes.NewBuffer(body)), 2048*2)
-			return io.NopCloser(rr)
-		},
-	}
-
-	return buffRes, nil
+type execContext struct {
+	cmd CommandExecutor
 }
 
 // newCommandRequest
@@ -103,8 +54,8 @@ func newCommandRequest(c *Client, cmd *Command) (*http.Request, error) {
 	// chromedriver does not accept reusable Reader, i.e. bytes.NewReader(cmd.Data)
 	// but, bytes.NewBuffer() without NopCloser wrappper works(!)
 	// note: geckodriver is fine with reusable request reader
-	//
-	// rUse := ReusableReader(bytes.NewReader(cmd.Data))
+
+	// rUse := ReusableReader(bytes.NewBuffer(cmd.Data))
 	// rr := io.LimitReader(rUse, c.RequestReaderLimit)
 	// reqBody := io.NopCloser(rr)
 	// req, err := http.NewRequest(cmd.Method, url, reqBody)

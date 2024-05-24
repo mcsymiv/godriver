@@ -6,14 +6,10 @@ import (
 
 func (d *Driver) Active() *Element {
 	el := new(struct{ Value map[string]string })
-	_, err := d.Client.ExecuteCmd(&Command{
-		Path:   "/element/active",
+	d.Client.ExecuteCommand(&Command{
+		Path:   PathElementActive,
 		Method: http.MethodGet,
 	}, el)
-
-	if err != nil {
-		return nil
-	}
 
 	eId := elementID(el.Value)
 

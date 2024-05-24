@@ -3,9 +3,9 @@ package driver
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
+	"net/http"
 )
 
 // reusableReader
@@ -55,19 +55,6 @@ func marshalData(body interface{}) []byte {
 	return b
 }
 
-func unmarshalResponses(buffRes []*buffResponse, any ...interface{}) error {
-	var err error
-
-	if len(buffRes) > 0 {
-		for i, res := range buffRes {
-			err = json.Unmarshal(res.buff, &any[i])
-
-			if err != nil {
-				err = fmt.Errorf("error on unmarshal %d response: %v", i, err)
-				break
-			}
-		}
-	}
-
-	return err
+func unmarshalRes(res *http.Response, any interface{}) error {
+	return json.NewDecoder(res.Body).Decode(any)
 }

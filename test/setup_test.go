@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mcsymiv/godriver/capabilities"
+	"github.com/mcsymiv/godriver/config"
 	"github.com/mcsymiv/godriver/driver"
 	"github.com/mcsymiv/godriver/file"
 	"github.com/xlzd/gotp"
@@ -17,6 +18,8 @@ func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	}
 
 	file.LoadEnv("../config", ".env")
+
+	config.TestSetting = config.DefaultSetting()
 
 	return d, func() {
 		// teardown

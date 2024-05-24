@@ -12,7 +12,7 @@ func newFrameCommand(el *Element) *Command {
 	}
 
 	return &Command{
-		Path:   "/frame",
+		Path:   PathDriverFrame,
 		Method: http.MethodPost,
 		Data: marshalData(map[string]interface{}{
 			"id": elFrameId,
@@ -22,10 +22,10 @@ func newFrameCommand(el *Element) *Command {
 
 func (el *Element) SwitchFrame() {
 	op := newFrameCommand(el)
-	el.Client.ExecuteCmd(op)
+	el.Client.ExecuteCommand(op, nil)
 }
 
 func (el *Element) SwitchFrameParent() {
 	op := newFrameCommand(nil)
-	el.Client.ExecuteCmd(op)
+	el.Client.ExecuteCommand(op, nil)
 }

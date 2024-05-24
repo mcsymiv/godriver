@@ -1,37 +1,25 @@
 package driver
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/mcsymiv/godriver/by"
 )
 
-// newFindCommand
-// returns default values for
-// /element command to execute
-func newFindCommand(by by.Selector, d *Driver) *Command {
-
-	return &Command{
-		Path:   "/element",
+func f(b by.Selector, d *Driver) (*Element, error) {
+	el := new(struct{ Value map[string]string })
+	d.Client.ExecuteCommand(&Command{
+		Path:   PathElementFind,
 		Method: http.MethodPost,
 		Data: marshalData(&JsonFindUsing{
-			Using: by.Using,
-			Value: by.Value,
+			Using: b.Using,
+			Value: b.Value,
 		}),
 
-		Strategies: []CommandExecutor{newFindStrategy(d)},
-	}
-}
-
-func find(b by.Selector, d *Driver) (*Element, error) {
-	op := newFindCommand(b, d)
-
-	el := new(struct{ Value map[string]string })
-	_, err := d.Client.ExecuteCmd(op, el)
-	if err != nil {
-		return nil, fmt.Errorf("error on find element by %+v\n error: %v", b, err)
-	}
+		Strategy: &findStrategy{
+			driver: d,
+		},
+	}, el)
 
 	eId := elementID(el.Value)
 
@@ -44,17 +32,17 @@ func find(b by.Selector, d *Driver) (*Element, error) {
 
 func finds(by by.Selector, d *Driver) ([]*Element, error) {
 	op := &Command{
-		Path:   "/elements",
+		Path:   PathElementsFind,
 		Method: http.MethodPost,
 		Data: marshalData(&JsonFindUsing{
 			Using: by.Using,
 			Value: by.Value,
 		}),
-		Strategies: []CommandExecutor{newFindStrategy(d)},
+		Strategy: newFindStrategy(d),
 	}
 
 	el := new(struct{ Value []map[string]string })
-	d.Client.ExecuteCmd(op, el)
+	d.Client.ExecuteCommand(op, el)
 	elementsId := elementsID(el.Value)
 
 	var els []*Element

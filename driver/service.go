@@ -14,10 +14,10 @@ import (
 var GeckoDriverPath string = "geckodriver"
 
 // ubuntu version
-// var ChromeDriverPath string = "chromerdriver"
+var ChromeDriverPath string = "chromedriver"
 
 // mac version
-var ChromeDriverPath string = "/Users/mcs/tools/chromedriver_122"
+// var ChromeDriverPath string = "/Users/mcs/tools/chromedriver_122"
 
 type DriverStatus struct {
 	Message string `json:"message"`
@@ -72,8 +72,8 @@ func driverCommand(cap *capabilities.Capabilities) []string {
 	if cap.Capabilities.AlwaysMatch.BrowserName == "firefox" {
 		cmdArgs = append(cmdArgs, GeckoDriverPath, "--port", cap.Port, "--log", "trace")
 	} else {
-		cmdArgs = append(cmdArgs, ChromeDriverPath, fmt.Sprintf("--port=%s", cap.Port), "--verbose", "--whitelisted-ips", "--log-path=chromedriver.log", "--enable-chrome-browser-cloud-management")
-		// cmdArgs = append(cmdArgs, ChromeDriverPath, fmt.Sprintf("--port=%s", cap.Port))
+		// cmdArgs = append(cmdArgs, ChromeDriverPath, fmt.Sprintf("--port=%s", cap.Port), "--verbose", "--whitelisted-ips", "--log-path=chromedriver.log", "--enable-chrome-browser-cloud-management")
+		cmdArgs = append(cmdArgs, ChromeDriverPath, fmt.Sprintf("--port=%s", cap.Port))
 	}
 
 	// redirect output argumetns ignored when used in exec.Command
