@@ -17,31 +17,25 @@ import (
 // TODO: allow changes to TestSettings in strategy
 // or until "true" breaks command loop
 // rename to loopRequest
-type strategy struct {
-	req requester
-	cmd *Command
-	dr  *Driver
-	a   interface{}
+type loopStrategyRequest struct {
+	loopRequester
+	*Command
+	*Driver
+	a interface{}
 }
 
 // newStrategy
 // initializes new loopRequest
 // TODO: maybe reduce number of params
-func newStrategy(r requester, c *Command, d *Driver, a interface{}) *strategy {
-	return &strategy{
-		req: r,
-		cmd: c,
-		dr:  d,
-		a:   a,
-	}
+func newStrategy(r loopRequester, c *Command, d *Driver, a interface{}) *loopStrategyRequest {
+	return &loopStrategyRequest{r, c, d, a}
 }
 
 // requester
 // actual loopRequest interface
 // i.e. strategy for strategy
 // to verify response in loop
-type requester interface {
-	// makeRequest(*http.Response, interface{}) bool // maybe change name to verifyResponse
+type loopRequester interface {
 	verify(*http.Response, interface{}) bool
 }
 
@@ -49,25 +43,25 @@ type requester interface {
 // wraps loopRequest strategy
 // unravels cmd data, i.e. post body, url etc.
 // performs NewRequest in loop
-// passed response to s*strategy (find, display, attribute)
-func (s *strategy) performStrategy() {
-	var cPath string = s.cmd.Path
-	if len(s.cmd.PathFormatArgs) != 0 {
-		cPath = fmt.Sprintf(s.cmd.Path, s.cmd.PathFormatArgs...)
+// passes response to s*loopStrategyRequest (find, display, attribute)
+func (s *loopStrategyRequest) performStrategy() {
+	var cPath string = s.Path
+	if len(s.PathFormatArgs) != 0 {
+		cPath = fmt.Sprintf(s.Path, s.PathFormatArgs...)
 	}
 
-	url := fmt.Sprintf("%s%s", s.dr.Client.BaseURL, cPath)
+	url := fmt.Sprintf("%s%s", s.Client.BaseURL, cPath)
 	start := time.Now()
 	end := start.Add(config.TestSetting.TimeoutFind * time.Second)
 
 	for {
-		req, err := http.NewRequest(s.cmd.Method, url, bytes.NewBuffer(s.cmd.Data))
+		req, err := http.NewRequest(s.Method, url, bytes.NewBuffer(s.Data))
 		if err != nil {
 			log.Println("error on NewRequest")
 			panic(err)
 		}
 
-		res, err := s.dr.Client.HTTPClient.Do(req)
+		res, err := s.Client.HTTPClient.Do(req)
 		if err != nil {
 			log.Println("error on Client Do Request")
 			res.Body.Close()
@@ -75,14 +69,16 @@ func (s *strategy) performStrategy() {
 		}
 
 		// strategy for strategy
-		if s.req.verify(res, s.a) {
+		// "verified" response will return true
+		// and break out of the loop
+		if s.verify(res, s.a) {
 			break
 		}
 
 		res.Body.Close()
 		if time.Now().After(end) {
 			if config.TestSetting.ScreenshotOnFail {
-				s.dr.Screenshot()
+				s.Screenshot()
 			}
 
 			break
@@ -146,6 +142,11 @@ func (d *displayStrategy) verify(res *http.Response, b interface{}) bool {
 }
 
 // clickStrategy
+// serves as an example
+// that <command>Strategy can divert
+// from default client request
+// and request to webdriver service
+// can be wrapped in custom logic
 type clickStrategy struct {
 	*Driver
 }
