@@ -27,12 +27,5 @@ func (d *Driver) Cl(selector string) *Element {
 		panic(fmt.Errorf("unable to find element, got: %v\n", err))
 	}
 
-	el.Client.ExecuteCommand(&Command{
-		Path:           PathElementClick,
-		PathFormatArgs: []any{el.Id},
-		Method:         http.MethodPost,
-		Data:           marshalData(&Empty{}),
-	}, &Empty{})
-
-	return el
+	return el.Click()
 }

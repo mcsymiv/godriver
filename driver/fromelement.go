@@ -15,7 +15,7 @@ func from(by by.Selector, e *Element) (*Element, error) {
 			Using: by.Using,
 			Value: by.Value,
 		}),
-		Strategy: newFindStrategy(e.Driver),
+		Strategy: &findStrategy{e.Driver},
 	}
 
 	el := new(struct{ Value map[string]string })
@@ -53,7 +53,7 @@ func (e *Element) Froms(by by.Selector) []*Element {
 			Using: by.Using,
 			Value: by.Value,
 		}),
-		Strategy: newFindStrategy(e.Driver),
+		Strategy: &findStrategy{e.Driver},
 	}
 
 	el := new(struct{ Value []map[string]string })
