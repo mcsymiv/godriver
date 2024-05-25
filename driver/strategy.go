@@ -178,6 +178,11 @@ type attrStrategy struct {
 	*Driver
 }
 
+func (at *attrStrategy) exec(cmd *Command, any interface{}) {
+	v := newStrategy(at, cmd, at.Driver, any)
+	v.performStrategy()
+}
+
 func (a *attrStrategy) verify(res *http.Response, b interface{}) bool {
 	if res.StatusCode == http.StatusOK {
 		err := json.NewDecoder(res.Body).Decode(b)
@@ -194,65 +199,33 @@ func (a *attrStrategy) verify(res *http.Response, b interface{}) bool {
 	return false
 }
 
-func (at *attrStrategy) exec(cmd *Command, any interface{}) {
-	v := newStrategy(at, cmd, at.Driver, any)
-	v.performStrategy()
-}
-
+// isDisplayStrategy
 type isDisplayStrategy struct {
 	*Driver
 }
 
-func (f *isDisplayStrategy) exec(cmd *Command, any interface{}) {
-	var displayResponse = new(struct{ Value bool })
-	var cPath string = cmd.Path
-	if len(cmd.PathFormatArgs) != 0 {
-		cPath = fmt.Sprintf(cmd.Path, cmd.PathFormatArgs...)
-	}
+func (is *isDisplayStrategy) exec(cmd *Command, any interface{}) {
+	v := newStrategy(is, cmd, is.Driver, any)
+	v.performStrategy()
+}
 
-	url := fmt.Sprintf("%s%s", f.Client.BaseURL, cPath)
-	start := time.Now()
-	end := start.Add(config.TestSetting.TimeoutFind * time.Second)
+func (a *isDisplayStrategy) verify(res *http.Response, b interface{}) bool {
+	if res.StatusCode == http.StatusOK {
+		var displayResponse = new(struct{ Value bool })
 
-	for {
-		req, err := http.NewRequest(cmd.Method, url, bytes.NewBuffer(cmd.Data))
+		err := json.NewDecoder(res.Body).Decode(displayResponse)
 		if err != nil {
-			log.Println("error on NewRequest")
-			panic(err)
-		}
-
-		res, err := f.Client.HTTPClient.Do(req)
-		if err != nil {
-			log.Println("error on Client Do Request")
+			log.Println("error on json NewDecoder")
 			res.Body.Close()
 			panic(err)
 		}
 
-		if res.StatusCode == http.StatusOK {
-			err = json.NewDecoder(res.Body).Decode(displayResponse)
-			if err != nil {
-				log.Println("error on json NewDecoder")
-				res.Body.Close()
-				panic(err)
-			}
-
-			if displayResponse.Value {
-				any = true
-				res.Body.Close()
-				break
-			}
+		if displayResponse.Value {
+			b = true
+			res.Body.Close()
+			return true
 		}
-
-		res.Body.Close()
-
-		if time.Now().After(end) {
-			if config.TestSetting.ScreenshotOnFail {
-				f.Screenshot()
-			}
-
-			break
-		}
-
-		log.Println("retry find element")
 	}
+
+	return false
 }
