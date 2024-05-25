@@ -16,12 +16,11 @@ import (
 // until TimeoutFind is reached
 // TODO: allow changes to TestSettings in strategy
 // or until "true" breaks command loop
-// rename to loopRequest
 type loopStrategyRequest struct {
 	loopRequester
 	*Command
 	*Driver
-	a interface{}
+	a interface{} // a, any data for response decoding
 }
 
 // newStrategy
@@ -194,7 +193,7 @@ func (a *attrStrategy) verify(res *http.Response, b interface{}) bool {
 		}
 
 		res.Body.Close()
-		return false
+		return true
 	}
 
 	return false
