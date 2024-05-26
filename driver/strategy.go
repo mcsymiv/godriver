@@ -67,6 +67,7 @@ func (f *findStrategy) exec(cmd *Command, any interface{}) {
 			break
 		}
 
+		time.Sleep(config.TestSetting.TimeoutDelay * time.Millisecond)
 		log.Println("retry find element")
 	}
 }
