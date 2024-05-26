@@ -26,7 +26,7 @@ type loopStrategyRequest struct {
 // newStrategy
 // initializes new loopRequest
 // TODO: maybe reduce number of params
-func newStrategy(r loopRequester, c *Command, d *Driver, a interface{}) *loopStrategyRequest {
+func newLoopStrategy(r loopRequester, c *Command, d *Driver, a interface{}) *loopStrategyRequest {
 	return &loopStrategyRequest{r, c, d, a}
 }
 
@@ -93,7 +93,7 @@ type findStrategy struct {
 }
 
 func (f *findStrategy) exec(cmd *Command, any interface{}) {
-	v := newStrategy(f, cmd, f.driver, any)
+	v := newLoopStrategy(f, cmd, f.driver, any)
 	v.performStrategy()
 }
 
@@ -118,7 +118,7 @@ type displayStrategy struct {
 }
 
 func (f *displayStrategy) exec(cmd *Command, any interface{}) {
-	v := newStrategy(f, cmd, f.Driver, any)
+	v := newLoopStrategy(f, cmd, f.Driver, any)
 	v.performStrategy()
 }
 
@@ -179,7 +179,7 @@ type attrStrategy struct {
 }
 
 func (at *attrStrategy) exec(cmd *Command, any interface{}) {
-	v := newStrategy(at, cmd, at.Driver, any)
+	v := newLoopStrategy(at, cmd, at.Driver, any)
 	v.performStrategy()
 }
 
@@ -205,7 +205,7 @@ type isDisplayStrategy struct {
 }
 
 func (is *isDisplayStrategy) exec(cmd *Command, any interface{}) {
-	v := newStrategy(is, cmd, is.Driver, any)
+	v := newLoopStrategy(is, cmd, is.Driver, any)
 	v.performStrategy()
 }
 
