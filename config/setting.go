@@ -2,7 +2,7 @@ package config
 
 import "time"
 
-var TestSetting *Setting
+var TestSetting Setting
 
 // Setting
 // global test settings
@@ -46,27 +46,13 @@ type Setting struct {
 	ArtifactScreenshotsPath string
 }
 
-func DefaultSetting() *Setting {
-	return &Setting{
+func DefaultSetting() Setting {
+	return Setting{
 		ScreenshotOnFail:        true,
 		TimeoutFind:             15,
 		TimeoutDelay:            700,
 		RefreshOnFindError:      true,
 		ArtifactRecordsPath:     "../artifacts/records",
 		ArtifactScreenshotsPath: "../artifacts/screenshots",
-	}
-}
-
-type SettingsFunc func(*Setting)
-
-func WithTimeoutDelay(t time.Duration) SettingsFunc {
-	return func(s *Setting) {
-		s.TimeoutDelay = t
-	}
-}
-
-func WithTimeoutFind(t time.Duration) SettingsFunc {
-	return func(s *Setting) {
-		s.TimeoutFind = t
 	}
 }

@@ -10,7 +10,9 @@ import (
 // e.g.: d.F("selector").Is().Attr("href")
 // will panic if found elemet is not displayed
 func (e *Element) Is() *Element {
-	cmd := displayCommand(e)
+	cmd := &Command{}
+	displayCommand(e, cmd)
+
 	cmd.Strategy = &displayStrategy{e.Driver}
 	e.Client.ExecuteCommand(cmd, nil)
 
@@ -24,7 +26,8 @@ func (e *Element) Is() *Element {
 func (e *Element) IsDisplayed() bool {
 	var is bool
 
-	cmd := displayCommand(e)
+	cmd := &Command{}
+	displayCommand(e, cmd)
 	cmd.Strategy = &isDisplayStrategy{e.Driver}
 
 	e.Client.ExecuteCommand(cmd, &is)
@@ -32,10 +35,8 @@ func (e *Element) IsDisplayed() bool {
 	return is
 }
 
-func displayCommand(e *Element) *Command {
-	return &Command{
-		Path:           PathElementDisplayed,
-		PathFormatArgs: []any{e.Id},
-		Method:         http.MethodGet,
-	}
+func displayCommand(e *Element, cmd *Command) {
+	cmd.Path = PathElementDisplayed
+	cmd.PathFormatArgs = []any{e.Id}
+	cmd.Method = http.MethodGet
 }

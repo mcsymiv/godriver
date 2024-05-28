@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/mcsymiv/godriver/config"
@@ -74,7 +75,10 @@ func (s *loopStrategyRequest) performStrategy() {
 			break
 		}
 
+		// close res res.Body if not verified
+		// i.e. loopStrategyRequest returns false
 		res.Body.Close()
+
 		if time.Now().After(end) {
 			if config.TestSetting.ScreenshotOnFail {
 				s.Screenshot()
@@ -107,34 +111,6 @@ func (f *findStrategy) verify(res *http.Response, b interface{}) bool {
 
 		res.Body.Close()
 		return true
-	}
-
-	return false
-}
-
-// displayStrategy
-type displayStrategy struct {
-	*Driver
-}
-
-func (f *displayStrategy) exec(cmd *Command, any interface{}) {
-	v := newLoopStrategy(f, cmd, f.Driver, any)
-	v.performStrategy()
-}
-
-func (d *displayStrategy) verify(res *http.Response, b interface{}) bool {
-	if res.StatusCode == http.StatusOK {
-		err := json.NewDecoder(res.Body).Decode(b)
-		if err != nil {
-			log.Println("error on json NewDecoder")
-			res.Body.Close()
-			panic(err)
-		}
-
-		if b.(struct{ Value bool }).Value {
-			res.Body.Close()
-			return true
-		}
 	}
 
 	return false
@@ -178,6 +154,16 @@ type attrStrategy struct {
 	*Driver
 }
 
+type hasAttributeStrategy struct {
+	*Driver
+	attrToContain string
+}
+
+func (at *hasAttributeStrategy) exec(cmd *Command, any interface{}) {
+	v := newLoopStrategy(at, cmd, at.Driver, any)
+	v.performStrategy()
+}
+
 func (at *attrStrategy) exec(cmd *Command, any interface{}) {
 	v := newLoopStrategy(at, cmd, at.Driver, any)
 	v.performStrategy()
@@ -199,9 +185,42 @@ func (a *attrStrategy) verify(res *http.Response, b interface{}) bool {
 	return false
 }
 
+func (h *hasAttributeStrategy) verify(res *http.Response, a interface{}) bool {
+	if res.StatusCode == http.StatusOK {
+		var attributeResponse = new(struct{ Value string })
+		err := json.NewDecoder(res.Body).Decode(attributeResponse)
+		if err != nil {
+			log.Println("error on json NewDecoder")
+			res.Body.Close()
+			panic(err)
+		}
+
+		if strings.Contains(attributeResponse.Value, h.attrToContain) {
+			a = true
+			res.Body.Close()
+			return true
+		}
+
+		res.Body.Close()
+		return false
+	}
+
+	return false
+}
+
 // isDisplayStrategy
 type isDisplayStrategy struct {
 	*Driver
+}
+
+// displayStrategy
+type displayStrategy struct {
+	*Driver
+}
+
+func (f *displayStrategy) exec(cmd *Command, any interface{}) {
+	v := newLoopStrategy(f, cmd, f.Driver, any)
+	v.performStrategy()
 }
 
 func (is *isDisplayStrategy) exec(cmd *Command, any interface{}) {
@@ -209,6 +228,31 @@ func (is *isDisplayStrategy) exec(cmd *Command, any interface{}) {
 	v.performStrategy()
 }
 
+// verify displayStrategy
+// does not return assigned b value
+// will exit on successful response
+// from webdriver
+func (d *displayStrategy) verify(res *http.Response, b interface{}) bool {
+	if res.StatusCode == http.StatusOK {
+		var displayResponse = new(struct{ Value bool })
+		err := json.NewDecoder(res.Body).Decode(displayResponse)
+		if err != nil {
+			log.Println("error on json NewDecoder")
+			res.Body.Close()
+			panic(err)
+		}
+
+		if displayResponse.Value {
+			res.Body.Close()
+			return true
+		}
+	}
+
+	return false
+}
+
+// verify isDisplayStreategy
+// will assign true to b to reuse in IsDisplayed()
 func (a *isDisplayStrategy) verify(res *http.Response, b interface{}) bool {
 	if res.StatusCode == http.StatusOK {
 		var displayResponse = new(struct{ Value bool })
@@ -225,6 +269,9 @@ func (a *isDisplayStrategy) verify(res *http.Response, b interface{}) bool {
 			res.Body.Close()
 			return true
 		}
+
+		res.Body.Close()
+		return false
 	}
 
 	return false

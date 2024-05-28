@@ -98,7 +98,7 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 
 // Service
 // Returns ref to started driver service process
-func (d Driver) Service() *exec.Cmd {
+func (d *Driver) Service() *exec.Cmd {
 	return d.ServiceCmd
 }
 
