@@ -16,9 +16,9 @@ const (
 	PathDriverUrl           = "/url"
 	PathDriverFrame         = "/frame"
 	PathDriverRefresh       = "/refresh"
-	PathDriverWindow        = "/windown"
-	PathDriverWindowNew     = "/windown/new"
-	PathDriverWindowHandles = "/windown/handles"
+	PathDriverWindow        = "/window"
+	PathDriverWindowNew     = "/window/new"
+	PathDriverWindowHandles = "/window/handles"
 	PathDriverScreenshot    = "/screenshot"
 
 	PathElementFind         = "/element"
