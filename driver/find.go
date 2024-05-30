@@ -38,7 +38,7 @@ func finds(by by.Selector, d *Driver) ([]*Element, error) {
 			Using: by.Using,
 			Value: by.Value,
 		}),
-		Strategy: newFindStrategy(d),
+		Strategy: &findStrategy{d},
 	}
 
 	el := new(struct{ Value []map[string]string })

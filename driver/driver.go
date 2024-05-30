@@ -16,9 +16,9 @@ const (
 	PathDriverUrl           = "/url"
 	PathDriverFrame         = "/frame"
 	PathDriverRefresh       = "/refresh"
-	PathDriverWindow        = "/windown"
-	PathDriverWindowNew     = "/windown/new"
-	PathDriverWindowHandles = "/windown/handles"
+	PathDriverWindow        = "/window"
+	PathDriverWindowNew     = "/window/new"
+	PathDriverWindowHandles = "/window/handles"
 	PathDriverScreenshot    = "/screenshot"
 
 	PathElementFind         = "/element"
@@ -98,7 +98,7 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 
 // Service
 // Returns ref to started driver service process
-func (d Driver) Service() *exec.Cmd {
+func (d *Driver) Service() *exec.Cmd {
 	return d.ServiceCmd
 }
 
