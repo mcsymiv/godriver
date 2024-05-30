@@ -12,6 +12,10 @@ import (
 	"github.com/mcsymiv/godriver/config"
 )
 
+type StrategyExecutor interface {
+	execute(Strategy)
+}
+
 // strategy for strategy
 // perform request command in loop
 // until TimeoutFind is reached

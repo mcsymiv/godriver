@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -35,7 +36,7 @@ const (
 )
 
 type Driver struct {
-	Client       *Client
+	Client       Client
 	Session      *Session
 	ServiceCmd   *exec.Cmd
 	Capabilities *capabilities.Capabilities
@@ -47,7 +48,7 @@ type Driver struct {
 // 2. wait for service process to start. requests /status with 2 second timeuout
 // 3. creates new session to use
 // 4. initializes new client
-func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
+func NewDriver(capsFn ...capabilities.CapabilitiesFunc) Driver {
 	caps := capabilities.DefaultCapabilities()
 	for _, capFn := range capsFn {
 		capFn(&caps)
@@ -89,11 +90,44 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 
 	config.TestSetting = config.DefaultSetting()
 
-	return &Driver{
+	return Driver{
 		Client:       c,
 		ServiceCmd:   cmd,
 		Capabilities: &caps,
 	}
+}
+
+func (d Driver) execute(st Strategy) {
+	var cPath string = st.Command.Path
+	if len(st.Command.PathFormatArgs) != 0 {
+		cPath = fmt.Sprintf(st.Command.Path, st.Command.PathFormatArgs...)
+	}
+
+	url := fmt.Sprintf("%s%s", d.Client.BaseURL, cPath)
+
+	req, err := http.NewRequest(st.Command.Method, url, bytes.NewBuffer(st.Command.Data))
+	if err != nil {
+		panic(err)
+	}
+
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+
+	res, err := d.Client.HTTPClient.Do(req)
+	if err != nil {
+		log.Println("error on strategy exec:", err)
+		panic(err)
+	}
+
+	if st.Command.ResponseData != nil {
+		err = json.NewDecoder(res.Body).Decode(st.Command.ResponseData)
+		if err != nil {
+			log.Println("error on strategy exec:", err)
+			panic(err)
+		}
+	}
+
+	defer res.Body.Close()
 }
 
 // Service

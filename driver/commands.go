@@ -20,13 +20,17 @@ type Command struct {
 	Strategy CommandExecutor
 }
 
+type Strategy struct {
+	StrategyExecutor
+	Command
+}
+
 // CommandExecutor
 // strategy to remove duplicates in execute Command/Request
 type CommandExecutor interface {
 
 	// TODO: Exec wrapper around req/res
 	// Exec(r *buffRequest) (*buffResponse, error)
-
 	exec(*Command, interface{})
 }
 

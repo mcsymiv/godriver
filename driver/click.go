@@ -19,6 +19,22 @@ func (el *Element) Click() *Element {
 	return el
 }
 
+// https://github.com/w3c/webdriver/issues/915#issuecomment-301100300
+func (el Element) DoubleClick() Element {
+	st := Strategy{
+		Command: Command{
+			Path:           PathElementClick,
+			Method:         http.MethodPost,
+			PathFormatArgs: []any{el.Id},
+			Data:           marshalData(Empty{}),
+		},
+	}
+
+	el.Driver.execute(st)
+
+	return el
+}
+
 func (d *Driver) Cl(selector string) *Element {
 	w3cBy := by.Strategy(selector)
 

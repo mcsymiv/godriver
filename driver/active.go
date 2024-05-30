@@ -18,3 +18,24 @@ func (d *Driver) Active() *Element {
 		Driver: d,
 	}
 }
+
+func (d Driver) IsActive() Element {
+	el := new(struct{ Value map[string]string })
+
+	st := Strategy{
+		Command: Command{
+			Path:         PathElementActive,
+			Method:       http.MethodGet,
+			ResponseData: el,
+		},
+	}
+
+	d.execute(st)
+
+	eId := elementID(el.Value)
+
+	return Element{
+		Id:     eId,
+		Driver: d,
+	}
+}

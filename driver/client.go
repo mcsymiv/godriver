@@ -19,8 +19,8 @@ type Client struct {
 
 // newClientV2
 // new client init without Session param
-func newClient(baseURL string) *Client {
-	return &Client{
+func newClient(baseURL string) Client {
+	return Client{
 		BaseURL:            baseURL,
 		RequestReaderLimit: 4096,
 
@@ -36,6 +36,10 @@ func newClient(baseURL string) *Client {
 	}
 }
 
+// wrapper for exec(*Command, interface{})
+// checks if cmd contains defined strategies
+// if no cmd.Strategy then will Do() Request
+// on HTTPClient
 func (c *Client) ExecuteCommand(cmd *Command, d interface{}) {
 	execCtx := &execContext{
 		cmd: c,
