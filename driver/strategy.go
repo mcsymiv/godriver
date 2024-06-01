@@ -178,6 +178,9 @@ func (s loopStrategyRequestV2) performStrategyV2() {
 
 			break
 		}
+
+		time.Sleep(config.TestSetting.TimeoutDelay * time.Millisecond)
+		log.Println("retry find element")
 	}
 }
 
