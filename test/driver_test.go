@@ -16,6 +16,7 @@ func TestDriver(t *testing.T) {
 	d, tear := Driver(
 		capabilities.ChromeArgs([]string{"--no-sandbox", "--disable-dev-shm-usage", "--headless"}),
 		capabilities.BrowserName("chrome"),
+		capabilities.HeadLess(),
 	)
 	defer tear()
 
