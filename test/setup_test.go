@@ -29,7 +29,7 @@ func Driver(caps ...capabilities.CapabilitiesFunc) (driver.Driver, func()) {
 	}
 }
 
-func loginOkta(d *driver.Driver) {
+func loginOkta(d driver.Driver) {
 	d.F("//*[@id='okta-signin-username']").Key(os.Getenv("OKTA_LOGIN"))
 	d.F("//*[@id='okta-signin-password']").Key(os.Getenv("OKTA_PASS")).Key(driver.EnterKey)
 	totp := gotp.NewDefaultTOTP(os.Getenv("OKTA_TOTP"))

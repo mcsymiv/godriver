@@ -7,7 +7,7 @@ import (
 func newFrameCommand(el Element) Command {
 	var elFrameId map[string]string
 
-	if el == (Element{}) {
+	if el.Id == "" {
 		elFrameId = el.ElementIdentifier()
 	}
 
@@ -22,7 +22,7 @@ func newFrameCommand(el Element) Command {
 
 func (el Element) SwitchFrame() {
 	st := defaultStrategy{
-		Driver: el.Driver,
+		Driver:  el.Driver,
 		Command: newFrameCommand(el),
 	}
 
@@ -31,7 +31,7 @@ func (el Element) SwitchFrame() {
 
 func (el Element) SwitchFrameParent() {
 	st := defaultStrategy{
-		Driver: el.Driver,
+		Driver:  el.Driver,
 		Command: newFrameCommand(Element{}),
 	}
 
