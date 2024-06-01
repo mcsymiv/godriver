@@ -44,6 +44,10 @@ type Setting struct {
 	// ScreenshotOnFail, or d.Screenshot()
 	// stores driver screnshots in *.jpg format
 	ArtifactScreenshotsPath string
+
+	// ArtifactJsFilesPath
+	// from app root a directory where
+	JsFilesPath string
 }
 
 func DefaultSetting() Setting {
@@ -54,5 +58,6 @@ func DefaultSetting() Setting {
 		RefreshOnFindError:      true,
 		ArtifactRecordsPath:     "../artifacts/records",
 		ArtifactScreenshotsPath: "../artifacts/screenshots",
+		JsFilesPath:             "../js",
 	}
 }
