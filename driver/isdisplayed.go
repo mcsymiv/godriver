@@ -9,12 +9,18 @@ import (
 // can seat in between element commands
 // e.g.: d.F("selector").Is().Attr("href")
 // will panic if found elemet is not displayed
-func (e *Element) Is() *Element {
-	cmd := &Command{}
-	displayCommand(e, cmd)
+func (e Element) Is() Element {
+	st := displayStrategy{
+		Driver: e.Driver,
+		Command: Command{
+			Path:           PathElementDisplayed,
+			Method:         http.MethodGet,
+			PathFormatArgs: []any{e.Id},
+			Data:           marshalData(Empty{}),
+		},
+	}
 
-	cmd.Strategy = &displayStrategy{e.Driver}
-	e.Client.ExecuteCommand(cmd, nil)
+	st.execute()
 
 	return e
 }
@@ -23,20 +29,21 @@ func (e *Element) Is() *Element {
 // returns bool result after TimeoutFind timeout
 // can seat in between element commands
 // e.g.: d.F("selector").IsDisplayed()
-func (e *Element) IsDisplayed() bool {
+func (e Element) IsDisplayed() bool {
 	var is bool
 
-	cmd := &Command{}
-	displayCommand(e, cmd)
-	cmd.Strategy = &isDisplayStrategy{e.Driver}
+	st := isDisplayStrategy{
+		Driver: e.Driver,
+		Command: Command{
+			Path:           PathElementDisplayed,
+			Method:         http.MethodGet,
+			PathFormatArgs: []any{e.Id},
+			Data:           marshalData(Empty{}),
+			ResponseData:   is,
+		},
+	}
 
-	e.Client.ExecuteCommand(cmd, &is)
+	st.execute()
 
 	return is
-}
-
-func displayCommand(e *Element, cmd *Command) {
-	cmd.Path = PathElementDisplayed
-	cmd.PathFormatArgs = []any{e.Id}
-	cmd.Method = http.MethodGet
 }

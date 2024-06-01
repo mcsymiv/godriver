@@ -34,7 +34,7 @@ type Element struct {
 	ElementError error
 	Id           string
 	by.Selector
-	*Driver
+	Driver
 }
 
 type JsonFindUsing struct {

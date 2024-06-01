@@ -13,11 +13,11 @@ type Command struct {
 	Path           string
 	Method         string
 	PathFormatArgs []any
+	Data           []byte
 
-	Data         []byte
 	ResponseData interface{}
 
-	Strategy CommandExecutor
+	// Strategy CommandExecutor
 }
 
 // CommandExecutor
@@ -26,8 +26,7 @@ type CommandExecutor interface {
 
 	// TODO: Exec wrapper around req/res
 	// Exec(r *buffRequest) (*buffResponse, error)
-
-	exec(*Command, interface{})
+	exec(Command, interface{})
 }
 
 // Context

@@ -7,19 +7,40 @@ import (
 	"github.com/mcsymiv/godriver/by"
 )
 
-func (el *Element) Click() *Element {
+func (el Element) Click() Element {
+	st := defaultStrategy{
+		Driver: el.Driver,
+		Command: Command{
+			Path:           PathElementClick,
+			Method:         http.MethodPost,
+			PathFormatArgs: []any{el.Id},
+			Data:           marshalData(Empty{}),
+		},
+	}
 
-	el.Client.ExecuteCommand(&Command{
-		Path:           PathElementClick,
-		PathFormatArgs: []any{el.Id},
-		Method:         http.MethodPost,
-		Data:           marshalData(&Empty{}),
-	}, &Empty{})
+	st.execute()
 
 	return el
 }
 
-func (d *Driver) Cl(selector string) *Element {
+// https://github.com/w3c/webdriver/issues/915#issuecomment-301100300
+func (el Element) DoubleClick() Element {
+	st := defaultStrategy{
+		Driver: el.Driver,
+		Command: Command{
+			Path:           PathElementClick,
+			Method:         http.MethodPost,
+			PathFormatArgs: []any{el.Id},
+			Data:           marshalData(Empty{}),
+		},
+	}
+
+	st.execute()
+
+	return el
+}
+
+func (d Driver) Cl(selector string) Element {
 	w3cBy := by.Strategy(selector)
 
 	el, err := f(w3cBy, d)
