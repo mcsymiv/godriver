@@ -67,26 +67,34 @@ const (
 	MetaKey       = string('\ue03d')
 )
 
-func (el *Element) Key(s string) *Element {
-	el.Client.ExecuteCommand(&Command{
-		Path:           PathElementValue,
-		PathFormatArgs: []any{el.Id},
-		Method:         http.MethodPost,
-		Data: marshalData(&SendKeys{
-			Text: s,
-		}),
-	}, nil)
+func (el Element) Key(s string) Element {
+	st := defaultStrategy{
+		Driver: el.Driver,
+		Command: Command{
+			Path:           PathElementValue,
+			PathFormatArgs: []any{el.Id},
+			Method:         http.MethodPost,
+			Data: marshalData(SendKeys{
+				Text: s,
+			}),
+		},
+	}
 
+	st.execute()
 	return el
 }
 
-func (el *Element) Clear() *Element {
-	el.Client.ExecuteCommand(&Command{
-		Path:           PathElementClear,
-		PathFormatArgs: []any{el.Id},
-		Method:         http.MethodPost,
-		Data:           marshalData(&Empty{}),
-	}, nil)
+func (el Element) Clear() Element {
+	st := defaultStrategy{
+		Driver: el.Driver,
+		Command: Command{
+			Path:           PathElementClear,
+			PathFormatArgs: []any{el.Id},
+			Method:         http.MethodPost,
+			Data:           marshalData(Empty{}),
+		},
+	}
 
+	st.execute()
 	return el
 }

@@ -6,64 +6,73 @@ import (
 	"github.com/mcsymiv/godriver/by"
 )
 
-func from(by by.Selector, e *Element) (*Element, error) {
-	op := &Command{
-		Path:           PathElementFromElement,
-		PathFormatArgs: []any{e.Id},
-		Method:         http.MethodPost,
-		Data: marshalData(&JsonFindUsing{
-			Using: by.Using,
-			Value: by.Value,
-		}),
-		Strategy: &findStrategy{e.Driver},
+func from(b by.Selector, e Element) (Element, error) {
+	el := new(struct{ Value map[string]string })
+
+	st := findStrategyV2{
+		Driver: e.Driver,
+		Command: Command{
+			Path:           PathElementFromElement,
+			PathFormatArgs: []any{e.Id},
+			Method:         http.MethodPost,
+			ResponseData:   el,
+			Data: marshalData(&JsonFindUsing{
+				Using: b.Using,
+				Value: b.Value,
+			}),
+		},
 	}
 
-	el := new(struct{ Value map[string]string })
-	e.Driver.Client.ExecuteCommand(op, el)
+	st.execute()
 
 	eId := elementID(el.Value)
 
-	return &Element{
+	return Element{
 		Id:       eId,
 		Driver:   e.Driver,
-		Selector: by,
+		Selector: b,
 	}, nil
 
 }
 
 // From
 // Finds Element from receiver Element
-func (e *Element) From(s string) *Element {
+func (e Element) From(s string) Element {
 	by := by.Strategy(s)
 
 	el, err := from(by, e)
 	if err != nil {
-		return nil
+		return Element{}
 	}
 
 	return el
 }
 
-func (e *Element) Froms(by by.Selector) []*Element {
-	op := &Command{
-		Path:           PathElementsFromElement,
-		PathFormatArgs: []any{e.Id},
-		Method:         http.MethodPost,
-		Data: marshalData(&JsonFindUsing{
-			Using: by.Using,
-			Value: by.Value,
-		}),
-		Strategy: &findStrategy{e.Driver},
+func (e Element) Froms(by by.Selector) []Element {
+	el := new(struct{ Value []map[string]string })
+
+	st := findStrategyV2{
+		Driver: e.Driver,
+		Command: Command{
+			Path:           PathElementsFromElement,
+			PathFormatArgs: []any{e.Id},
+			Method:         http.MethodPost,
+			ResponseData:   el,
+			Data: marshalData(&JsonFindUsing{
+				Using: by.Using,
+				Value: by.Value,
+			}),
+		},
 	}
 
-	el := new(struct{ Value []map[string]string })
-	e.Driver.Client.ExecuteCommand(op, el)
+	st.execute()
+
 	elementsIds := elementsID(el.Value)
 
-	var els []*Element
+	var els []Element
 
 	for _, id := range elementsIds {
-		els = append(els, &Element{
+		els = append(els, Element{
 			Id:     id,
 			Driver: e.Driver,
 		})

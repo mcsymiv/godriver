@@ -7,7 +7,7 @@ import (
 )
 
 // F
-func (d *Driver) F(selector string) *Element {
+func (d Driver) F(selector string) Element {
 	w3cBy := by.Strategy(selector)
 
 	el, err := f(w3cBy, d)
@@ -25,15 +25,15 @@ func (d *Driver) F(selector string) *Element {
 // upd selector strategy if needed
 // upd error handling
 // add different find strategy
-func (d *Driver) TryF(selectors []string) *Element {
-	var el *Element
+func (d Driver) TryF(selectors []string) Element {
+	var el Element
 
 	for _, s := range selectors {
 		w3cBy := by.Strategy(s)
 
 		el, err := f(w3cBy, d)
 		if err != nil {
-			return nil
+			return Element{}
 		}
 
 		if el.Id != "" {
@@ -45,7 +45,7 @@ func (d *Driver) TryF(selectors []string) *Element {
 	return el
 }
 
-func (d *Driver) Fs(selector string) []*Element {
+func (d Driver) Fs(selector string) []Element {
 	w3cBy := by.Css(selector)
 
 	el, err := finds(w3cBy, d)

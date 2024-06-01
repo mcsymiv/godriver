@@ -59,17 +59,18 @@ func executeScriptSync(d Driver, script string, args ...interface{}) (interface{
 		args = make([]interface{}, 0)
 	}
 
-	op := &Command{
-		Path:   "/execute/sync",
-		Method: http.MethodPost,
-		Data: marshalData(map[string]interface{}{
-			"script": script,
-			"args":   args,
-		}),
-	}
-
 	rr := new(struct{ Value interface{} })
-	d.Client.ExecuteCommand(op, rr)
+	st := defaultStrategy{
+		Driver: d,
+		Command: Command{
+			Path:   "/execute/sync",
+			Method: http.MethodPost,
+			Data: marshalData(map[string]interface{}{
+				"script": script,
+				"args":   args,
+			}),
+		}}
 
+	st.execute()
 	return rr.Value, nil
 }

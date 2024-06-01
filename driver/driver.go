@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -95,39 +94,6 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) Driver {
 		ServiceCmd:   cmd,
 		Capabilities: &caps,
 	}
-}
-
-func (d Driver) execute(st Strategy) {
-	var cPath string = st.Command.Path
-	if len(st.Command.PathFormatArgs) != 0 {
-		cPath = fmt.Sprintf(st.Command.Path, st.Command.PathFormatArgs...)
-	}
-
-	url := fmt.Sprintf("%s%s", d.Client.BaseURL, cPath)
-
-	req, err := http.NewRequest(st.Command.Method, url, bytes.NewBuffer(st.Command.Data))
-	if err != nil {
-		panic(err)
-	}
-
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-Type", "application/json")
-
-	res, err := d.Client.HTTPClient.Do(req)
-	if err != nil {
-		log.Println("error on strategy exec:", err)
-		panic(err)
-	}
-
-	if st.Command.ResponseData != nil {
-		err = json.NewDecoder(res.Body).Decode(st.Command.ResponseData)
-		if err != nil {
-			log.Println("error on strategy exec:", err)
-			panic(err)
-		}
-	}
-
-	defer res.Body.Close()
 }
 
 // Service

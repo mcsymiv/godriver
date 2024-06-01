@@ -13,7 +13,11 @@ import (
 )
 
 type StrategyExecutor interface {
-	execute(Strategy)
+	execute()
+}
+
+type loopRequesterV2 interface {
+	verifyV2(*http.Response, interface{}) bool
 }
 
 // strategy for strategy
@@ -21,26 +25,108 @@ type StrategyExecutor interface {
 // until TimeoutFind is reached
 // TODO: allow changes to TestSettings in strategy
 // or until "true" breaks command loop
-type loopStrategyRequest struct {
-	loopRequester
-	*Command
-	*Driver
-	a interface{} // a, any data for response decoding
+type loopStrategyRequestV2 struct {
+	loopRequesterV2
+	Command
+	Driver
 }
 
-// newStrategy
-// initializes new loopRequest
-// TODO: maybe reduce number of params
-func newLoopStrategy(r loopRequester, c *Command, d *Driver, a interface{}) *loopStrategyRequest {
-	return &loopStrategyRequest{r, c, d, a}
+// defaultStrategy
+// executes simple Command Request
+// Creates new http.Client
+type defaultStrategy struct {
+	Driver
+	Command
 }
 
-// requester
-// actual loopRequest interface
-// i.e. strategy for strategy
-// to verify response in loop
-type loopRequester interface {
-	verify(*http.Response, interface{}) bool
+type findStrategyV2 struct {
+	Driver
+	Command
+}
+
+type displayStrategy struct {
+	Driver
+	Command
+}
+
+type isDisplayStrategy struct {
+	Driver
+	Command
+}
+
+// attrStrategy
+type attrStrategy struct {
+	Driver
+	Command
+}
+
+type clickStrategy struct {
+	Driver
+	Command
+}
+
+type hasAttributeStrategy struct {
+	Driver
+	Command
+	attrToContain string
+}
+
+func (f findStrategyV2) execute() {
+	v := loopStrategyRequestV2{f, f.Command, f.Driver}
+	v.performStrategyV2()
+}
+
+func (f displayStrategy) execute() {
+	v := loopStrategyRequestV2{f, f.Command, f.Driver}
+	v.performStrategyV2()
+}
+
+func (is isDisplayStrategy) execute() {
+	v := loopStrategyRequestV2{is, is.Command, is.Driver}
+	v.performStrategyV2()
+}
+
+func (is attrStrategy) execute() {
+	v := loopStrategyRequestV2{is, is.Command, is.Driver}
+	v.performStrategyV2()
+}
+
+func (is hasAttributeStrategy) execute() {
+	v := loopStrategyRequestV2{is, is.Command, is.Driver}
+	v.performStrategyV2()
+}
+
+func (d defaultStrategy) execute() {
+	var cPath string = d.Command.Path
+	if len(d.Command.PathFormatArgs) != 0 {
+		cPath = fmt.Sprintf(d.Command.Path, d.Command.PathFormatArgs...)
+	}
+
+	url := fmt.Sprintf("%s%s", d.Client.BaseURL, cPath)
+
+	req, err := http.NewRequest(d.Command.Method, url, bytes.NewBuffer(d.Command.Data))
+	if err != nil {
+		panic(err)
+	}
+
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+
+	res, err := d.Client.HTTPClient.Do(req)
+	if err != nil {
+		log.Println("error on strategy exec:", err)
+		panic(err)
+	}
+
+	if d.Command.ResponseData != nil {
+		err = json.NewDecoder(res.Body).Decode(d.Command.ResponseData)
+		if err != nil {
+			log.Println("error on strategy exec:", err)
+			panic(err)
+		}
+	}
+
+	defer res.Body.Close()
 }
 
 // performStrategy
@@ -48,7 +134,7 @@ type loopRequester interface {
 // unravels cmd data, i.e. post body, url etc.
 // performs NewRequest in loop
 // passes response to s*loopStrategyRequest (find, display, attribute)
-func (s *loopStrategyRequest) performStrategy() {
+func (s loopStrategyRequestV2) performStrategyV2() {
 	var cPath string = s.Path
 	if len(s.PathFormatArgs) != 0 {
 		cPath = fmt.Sprintf(s.Path, s.PathFormatArgs...)
@@ -75,7 +161,7 @@ func (s *loopStrategyRequest) performStrategy() {
 		// strategy for strategy
 		// "verified" response will return true
 		// and break out of the loop
-		if s.verify(res, s.a) {
+		if s.verifyV2(res, s.Command.ResponseData) {
 			break
 		}
 
@@ -93,19 +179,7 @@ func (s *loopStrategyRequest) performStrategy() {
 	}
 }
 
-// command strategies section
-//
-// findStrategy
-type findStrategy struct {
-	driver *Driver
-}
-
-func (f *findStrategy) exec(cmd *Command, any interface{}) {
-	v := newLoopStrategy(f, cmd, f.driver, any)
-	v.performStrategy()
-}
-
-func (f *findStrategy) verify(res *http.Response, b interface{}) bool {
+func (f findStrategyV2) verifyV2(res *http.Response, b interface{}) bool {
 	if res.StatusCode == http.StatusOK {
 		err := json.NewDecoder(res.Body).Decode(b)
 		if err != nil {
@@ -120,123 +194,7 @@ func (f *findStrategy) verify(res *http.Response, b interface{}) bool {
 	return false
 }
 
-// clickStrategy
-// serves as an example
-// that <command>Strategy can divert
-// from default client request
-// and request to webdriver service
-// can be wrapped in custom logic
-type clickStrategy struct {
-	*Driver
-}
-
-func (f *clickStrategy) exec(cmd *Command, any interface{}) {
-	var cPath string = cmd.Path
-	if len(cmd.PathFormatArgs) != 0 {
-		cPath = fmt.Sprintf(cmd.Path, cmd.PathFormatArgs...)
-	}
-
-	url := fmt.Sprintf("%s%s", f.Driver.Client.BaseURL, cPath)
-
-	req, err := http.NewRequest(cmd.Method, url, bytes.NewBuffer(cmd.Data))
-	if err != nil {
-		log.Println("error on NewRequest")
-		panic(err)
-	}
-
-	res, err := f.Driver.Client.HTTPClient.Do(req)
-	if err != nil {
-		log.Println("error on Client Do Request")
-		panic(err)
-	}
-
-	defer res.Body.Close()
-}
-
-// attrStrategy
-type attrStrategy struct {
-	*Driver
-}
-
-type hasAttributeStrategy struct {
-	*Driver
-	attrToContain string
-}
-
-func (at *hasAttributeStrategy) exec(cmd *Command, any interface{}) {
-	v := newLoopStrategy(at, cmd, at.Driver, any)
-	v.performStrategy()
-}
-
-func (at *attrStrategy) exec(cmd *Command, any interface{}) {
-	v := newLoopStrategy(at, cmd, at.Driver, any)
-	v.performStrategy()
-}
-
-func (a *attrStrategy) verify(res *http.Response, b interface{}) bool {
-	if res.StatusCode == http.StatusOK {
-		err := json.NewDecoder(res.Body).Decode(b)
-		if err != nil {
-			log.Println("error on json NewDecoder")
-			res.Body.Close()
-			panic(err)
-		}
-
-		res.Body.Close()
-		return true
-	}
-
-	return false
-}
-
-func (h *hasAttributeStrategy) verify(res *http.Response, a interface{}) bool {
-	if res.StatusCode == http.StatusOK {
-		var attributeResponse = new(struct{ Value string })
-		err := json.NewDecoder(res.Body).Decode(attributeResponse)
-		if err != nil {
-			log.Println("error on json NewDecoder")
-			res.Body.Close()
-			panic(err)
-		}
-
-		if strings.Contains(attributeResponse.Value, h.attrToContain) {
-			a = true
-			res.Body.Close()
-			return true
-		}
-
-		res.Body.Close()
-		return false
-	}
-
-	return false
-}
-
-// isDisplayStrategy
-type isDisplayStrategy struct {
-	*Driver
-}
-
-// displayStrategy
-type displayStrategy struct {
-	*Driver
-}
-
-func (f *displayStrategy) exec(cmd *Command, any interface{}) {
-	v := newLoopStrategy(f, cmd, f.Driver, any)
-	v.performStrategy()
-}
-
-func (is *isDisplayStrategy) exec(cmd *Command, any interface{}) {
-	v := newLoopStrategy(is, cmd, is.Driver, any)
-	v.performStrategy()
-}
-
-// verify displayStrategy
-// does not return assigned b value
-// will exit on successful response
-// from webdriver
-func (d *displayStrategy) verify(res *http.Response, b interface{}) bool {
+func (d displayStrategy) verifyV2(res *http.Response, b interface{}) bool {
 	if res.StatusCode == http.StatusOK {
 		var displayResponse = new(struct{ Value bool })
 		err := json.NewDecoder(res.Body).Decode(displayResponse)
@@ -257,7 +215,7 @@ func (d *displayStrategy) verify(res *http.Response, b interface{}) bool {
 
 // verify isDisplayStreategy
 // will assign true to b to reuse in IsDisplayed()
-func (a *isDisplayStrategy) verify(res *http.Response, b interface{}) bool {
+func (a isDisplayStrategy) verifyV2(res *http.Response, b interface{}) bool {
 	if res.StatusCode == http.StatusOK {
 		var displayResponse = new(struct{ Value bool })
 
@@ -270,6 +228,45 @@ func (a *isDisplayStrategy) verify(res *http.Response, b interface{}) bool {
 
 		if displayResponse.Value {
 			b = true
+			res.Body.Close()
+			return true
+		}
+
+		res.Body.Close()
+		return false
+	}
+
+	return false
+}
+
+func (a attrStrategy) verifyV2(res *http.Response, b interface{}) bool {
+	if res.StatusCode == http.StatusOK {
+		err := json.NewDecoder(res.Body).Decode(b)
+		if err != nil {
+			log.Println("error on json NewDecoder")
+			res.Body.Close()
+			panic(err)
+		}
+
+		res.Body.Close()
+		return true
+	}
+
+	return false
+}
+
+func (h hasAttributeStrategy) verifyV2(res *http.Response, a interface{}) bool {
+	if res.StatusCode == http.StatusOK {
+		var attributeResponse = new(struct{ Value string })
+		err := json.NewDecoder(res.Body).Decode(attributeResponse)
+		if err != nil {
+			log.Println("error on json NewDecoder")
+			res.Body.Close()
+			panic(err)
+		}
+
+		if strings.Contains(attributeResponse.Value, h.attrToContain) {
+			a = true
 			res.Body.Close()
 			return true
 		}
