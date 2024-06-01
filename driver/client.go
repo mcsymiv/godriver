@@ -36,7 +36,7 @@ func newClient(baseURL string) *Client {
 	}
 }
 
-func (c *Client) ExecuteCommand(cmd *Command, d any) {
+func (c *Client) ExecuteCommand(cmd *Command, d interface{}) {
 	execCtx := &execContext{
 		cmd: c,
 	}
@@ -48,7 +48,7 @@ func (c *Client) ExecuteCommand(cmd *Command, d any) {
 	execCtx.cmd.exec(cmd, d)
 }
 
-func (cl *Client) exec(cmd *Command, any interface{}) {
+func (cl *Client) exec(cmd *Command, a interface{}) {
 	var cPath string = cmd.Path
 	if len(cmd.PathFormatArgs) != 0 {
 		cPath = fmt.Sprintf(cmd.Path, cmd.PathFormatArgs...)
@@ -70,8 +70,8 @@ func (cl *Client) exec(cmd *Command, any interface{}) {
 		panic(err)
 	}
 
-	if any != nil {
-		err = json.NewDecoder(res.Body).Decode(any)
+	if a != nil {
+		err = json.NewDecoder(res.Body).Decode(a)
 		if err != nil {
 			log.Println("error on strategy exec:", err)
 			panic(err)

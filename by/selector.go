@@ -2,7 +2,6 @@ package by
 
 import (
 	"fmt"
-	"strings"
 )
 
 // w3c Locator strategies
@@ -22,20 +21,21 @@ type Selector struct {
 // checkSubstrings
 // wrapper around strings.Contains
 // to check multiple substrings
-func checkSubstrings(str string, subs ...string) (bool, int) {
-	matches := 0
-	isCompleteMatch := true
-
-	for _, sub := range subs {
-		if strings.Contains(str, sub) {
-			matches += 1
-		} else {
-			isCompleteMatch = false
-		}
-	}
-
-	return isCompleteMatch, matches
-}
+//
+//	func checkSubstrings(str string, subs ...string) (bool, int) {
+//		matches := 0
+//		isCompleteMatch := true
+//
+//		for _, sub := range subs {
+//			if strings.Contains(str, sub) {
+//				matches += 1
+//			} else {
+//				isCompleteMatch = false
+//			}
+//		}
+//
+//		return isCompleteMatch, matches
+//	}
 
 // Strategy
 // defines find element Strategy
@@ -51,22 +51,24 @@ func checkSubstrings(str string, subs ...string) (bool, int) {
 // as final option, if selector does not contain /, [ symbols
 // XPathTextStrategy will be used
 func Strategy(value string) Selector {
-	if value[0] == '/' || value[1] == '/' || strings.Contains(value, "/") {
-		return Selector{
-			Value: value,
-			Using: ByXPath,
-		}
+	var s Selector
+	s.Value = value
+
+	if value[0] == '/' || value[1] == '/' {
+		s.Using = ByXPath
+		return s
 	}
 
 	// if ok, m := checkSubstrings(value, ".", "#", "[", "]"); ok || m > 0 {
-	if value[0] == '[' || strings.Contains(value, "[") {
-		return Selector{
-			Value: value,
-			Using: ByCssSelector,
-		}
+	if value[0] == '[' {
+		s.Using = ByCssSelector
+		return s
 	}
 
-	return xPathTextStrategy(value)
+	s.Using = ByXPath
+	s.Value = fmt.Sprintf("//*[text()='%[1]s'] | //*[@placeholder='%[1]s'] | //*[@value='%[1]s']", value)
+
+	return s
 }
 
 // XPathTextStrategy
@@ -79,10 +81,6 @@ func xPathTextStrategy(value string) Selector {
 		Using: ByXPath,
 		Value: fmt.Sprintf("//*[text()='%[1]s'] | //*[@placeholder='%[1]s'] | //*[@value='%[1]s']", value),
 	}
-}
-
-func Text(value string) Selector {
-	return xPathTextStrategy(value)
 }
 
 func Css(value string) Selector {
