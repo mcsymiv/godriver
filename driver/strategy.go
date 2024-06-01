@@ -115,6 +115,7 @@ func (d defaultStrategy) execute() {
 	res, err := d.Client.HTTPClient.Do(req)
 	if err != nil {
 		log.Println("error on strategy exec:", err)
+		res.Body.Close()
 		panic(err)
 	}
 
@@ -122,6 +123,7 @@ func (d defaultStrategy) execute() {
 		err = json.NewDecoder(res.Body).Decode(d.Command.ResponseData)
 		if err != nil {
 			log.Println("error on strategy exec:", err)
+			res.Body.Close()
 			panic(err)
 		}
 	}

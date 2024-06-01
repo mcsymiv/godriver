@@ -109,6 +109,8 @@ func getDriverStatus(caps *capabilities.Capabilities) (*DriverStatus, error) {
 		return nil, err
 	}
 
+	defer req.Body.Close()
+
 	req.Header.Add("Accept", "json/application")
 	c := &http.Client{}
 	res, err := c.Do(req)
