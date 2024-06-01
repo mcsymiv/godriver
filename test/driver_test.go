@@ -14,7 +14,8 @@ import (
 
 func TestDriver(t *testing.T) {
 	d, tear := Driver(
-		capabilities.MozPrefs("intl.accept_languages", "en-GB"),
+		capabilities.ChromeArgs([]string{"--no-sandbox", "--disable-dev-shm-usage", "--headless"}),
+		capabilities.BrowserName("chrome"),
 		capabilities.HeadLess(),
 	)
 	defer tear()
