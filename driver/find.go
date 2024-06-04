@@ -9,7 +9,7 @@ import (
 func f(b by.Selector, d Driver) (Element, error) {
 	el := new(struct{ Value map[string]string })
 
-	d.execute(findStrategyV2{Command{
+	d.execute(retryStrategy{Command{
 		Path:         PathElementFind,
 		Method:       http.MethodPost,
 		ResponseData: el,

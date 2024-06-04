@@ -2,6 +2,7 @@ package driver
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -36,6 +37,90 @@ type loopStrategyRequestV2 struct {
 // Creates new http.Client
 type defaultStrategy struct {
 	Command
+}
+
+type retryRequester interface {
+	verify(*http.Response, interface{}) bool
+}
+
+type retryStrategyRequest struct {
+	retryRequester
+}
+
+type retryStrategy struct {
+	Command
+}
+
+func (f retryStrategy) execute(d Driver) {
+	ctx := context.WithValue(context.Background(), "driver", d)
+	r := retryStrategyRequest{f}
+
+	r.perform(ctx, f.Command)
+}
+
+func (r retryStrategyRequest) perform(ctx context.Context, cmd Command) {
+	var cPath string = cmd.Path
+	if len(cmd.PathFormatArgs) != 0 {
+		cPath = fmt.Sprintf(cmd.Path, cmd.PathFormatArgs...)
+	}
+
+	d := ctx.Value("driver").(Driver)
+
+	url := fmt.Sprintf("%s%s", d.Client.BaseURL, cPath)
+	start := time.Now()
+	end := start.Add(config.TestSetting.TimeoutFind * time.Second)
+
+	for {
+		req, err := http.NewRequestWithContext(ctx, cmd.Method, url, bytes.NewBuffer(cmd.Data))
+		if err != nil {
+			log.Println("error on NewRequest")
+			panic(err)
+		}
+
+		res, err := d.Client.HTTPClient.Do(req)
+		if err != nil {
+			log.Println("error on Client Do Request")
+			res.Body.Close()
+			panic(err)
+		}
+
+		// strategy for strategy
+		// "verified" response will return true
+		// and break out of the loop
+		if r.verify(res, cmd.ResponseData) {
+			break
+		}
+
+		// close res res.Body if not verified
+		// i.e. loopStrategyRequest returns false
+		res.Body.Close()
+
+		if time.Now().After(end) {
+			if config.TestSetting.ScreenshotOnFail {
+				d.Screenshot()
+			}
+
+			break
+		}
+
+		time.Sleep(config.TestSetting.TimeoutDelay * time.Millisecond)
+		log.Println("retry find element")
+	}
+}
+
+func (f retryStrategy) verify(res *http.Response, b interface{}) bool {
+	if res.StatusCode == http.StatusOK {
+		err := json.NewDecoder(res.Body).Decode(b)
+		if err != nil {
+			log.Println("error on json NewDecoder")
+			panic(err)
+		}
+
+		res.Body.Close()
+		return true
+	}
+
+	return false
 }
 
 type findStrategyV2 struct {
