@@ -15,17 +15,15 @@ func attrCommand(e Element, a string) Command {
 func (e Element) Attr(a string) string {
 	attrResponse := new(struct{ Value string })
 
-	st := attrStrategy{
-		Driver: e.Driver,
+	e.Driver.execute(attrStrategy{
 		Command: Command{
 			PathFormatArgs: []any{e.Id, a},
 			Path:           PathElementAttribute,
 			Method:         http.MethodGet,
 			ResponseData:   attrResponse,
 		},
-	}
+	})
 
-	st.execute()
 	return attrResponse.Value
 }
 
@@ -35,12 +33,7 @@ func (e Element) HasAttr(a string) bool {
 	cmd := attrCommand(e, a)
 	cmd.ResponseData = hasAttr
 
-	st := hasAttributeStrategy{
-		Driver:  e.Driver,
-		Command: cmd,
-	}
-
-	st.execute()
+	e.Driver.execute(hasAttributeStrategy{cmd, a})
 
 	return hasAttr
 }
@@ -51,12 +44,7 @@ func (e Element) IsAttr(a string) bool {
 	cmd := attrCommand(e, a)
 	cmd.ResponseData = attrResponse
 
-	st := defaultStrategy{
-		Driver:  e.Driver,
-		Command: cmd,
-	}
-
-	st.execute()
+	e.Driver.execute(defaultStrategy{cmd})
 
 	return attrResponse.Value == a
 }

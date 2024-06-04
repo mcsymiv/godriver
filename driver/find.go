@@ -9,20 +9,15 @@ import (
 func f(b by.Selector, d Driver) (Element, error) {
 	el := new(struct{ Value map[string]string })
 
-	st := findStrategyV2{
-		Driver: d,
-		Command: Command{
-			Path:         PathElementFind,
-			Method:       http.MethodPost,
-			ResponseData: el,
-			Data: marshalData(&JsonFindUsing{
-				Using: b.Using,
-				Value: b.Value,
-			}),
-		},
-	}
-
-	st.execute()
+	d.execute(findStrategyV2{Command{
+		Path:         PathElementFind,
+		Method:       http.MethodPost,
+		ResponseData: el,
+		Data: marshalData(&JsonFindUsing{
+			Using: b.Using,
+			Value: b.Value,
+		}),
+	}})
 
 	eId := elementID(el.Value)
 
@@ -36,20 +31,15 @@ func f(b by.Selector, d Driver) (Element, error) {
 func finds(b by.Selector, d Driver) ([]Element, error) {
 	el := new(struct{ Value []map[string]string })
 
-	st := findStrategyV2{
-		Driver: d,
-		Command: Command{
-			Path:         PathElementsFind,
-			Method:       http.MethodPost,
-			ResponseData: el,
-			Data: marshalData(&JsonFindUsing{
-				Using: b.Using,
-				Value: b.Value,
-			}),
-		},
-	}
-
-	st.execute()
+	d.execute(findStrategyV2{Command{
+		Path:         PathElementsFind,
+		Method:       http.MethodPost,
+		ResponseData: el,
+		Data: marshalData(&JsonFindUsing{
+			Using: b.Using,
+			Value: b.Value,
+		}),
+	}})
 
 	elementsId := elementsID(el.Value)
 

@@ -44,18 +44,15 @@ func executeScriptSync(d Driver, script string, args ...interface{}) (interface{
 	}
 
 	rr := new(struct{ Value interface{} })
-	st := defaultStrategy{
-		Driver: d,
-		Command: Command{
-			Path:   PathDriverScriptSync,
-			Method: http.MethodPost,
-			Data: marshalData(map[string]interface{}{
-				"script": script,
-				"args":   args,
-			}),
-			ResponseData: rr,
-		}}
+	d.execute(defaultStrategy{Command{
+		Path:   PathDriverScriptSync,
+		Method: http.MethodPost,
+		Data: marshalData(map[string]interface{}{
+			"script": script,
+			"args":   args,
+		}),
+		ResponseData: rr,
+	}})
 
-	st.execute()
 	return rr.Value, nil
 }

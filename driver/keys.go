@@ -68,33 +68,26 @@ const (
 )
 
 func (el Element) Key(s string) Element {
-	st := defaultStrategy{
-		Driver: el.Driver,
-		Command: Command{
-			Path:           PathElementValue,
-			PathFormatArgs: []any{el.Id},
-			Method:         http.MethodPost,
-			Data: marshalData(SendKeys{
-				Text: s,
-			}),
-		},
-	}
+	el.Driver.execute(defaultStrategy{Command{
+		Path:           PathElementValue,
+		PathFormatArgs: []any{el.Id},
+		Method:         http.MethodPost,
+		Data: marshalData(SendKeys{
+			Text: s,
+		}),
+	}})
 
-	st.execute()
 	return el
 }
 
 func (el Element) Clear() Element {
-	st := defaultStrategy{
-		Driver: el.Driver,
+	el.Driver.execute(defaultStrategy{
 		Command: Command{
 			Path:           PathElementClear,
 			PathFormatArgs: []any{el.Id},
 			Method:         http.MethodPost,
 			Data:           marshalData(Empty{}),
-		},
-	}
+		}})
 
-	st.execute()
 	return el
 }

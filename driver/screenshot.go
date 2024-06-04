@@ -36,16 +36,11 @@ func newScreenShotCommand() Command {
 func screenshot(d Driver) error {
 
 	data := new(struct{ Value string })
-	st := defaultStrategy{
-		Driver: d,
-		Command: Command{
-			Path:         PathDriverScreenshot,
-			Method:       http.MethodGet,
-			ResponseData: data,
-		},
-	}
-
-	st.execute()
+	d.execute(defaultStrategy{Command{
+		Path:         PathDriverScreenshot,
+		Method:       http.MethodGet,
+		ResponseData: data,
+	}})
 
 	decodedImage, err := base64.StdEncoding.DecodeString(data.Value)
 	if err != nil {

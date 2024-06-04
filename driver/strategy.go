@@ -13,7 +13,7 @@ import (
 )
 
 type StrategyExecutor interface {
-	execute()
+	execute(Driver)
 }
 
 type loopRequesterV2 interface {
@@ -35,74 +35,71 @@ type loopStrategyRequestV2 struct {
 // executes simple Command Request
 // Creates new http.Client
 type defaultStrategy struct {
-	Driver
 	Command
 }
 
 type findStrategyV2 struct {
-	Driver
 	Command
 }
 
 type displayStrategy struct {
-	Driver
 	Command
 }
 
 type isDisplayStrategy struct {
-	Driver
 	Command
 }
 
 // attrStrategy
 type attrStrategy struct {
-	Driver
 	Command
 }
 
 type clickStrategy struct {
-	Driver
 	Command
 }
 
 type hasAttributeStrategy struct {
-	Driver
 	Command
 	attrToContain string
 }
 
-func (f findStrategyV2) execute() {
-	v := loopStrategyRequestV2{f, f.Command, f.Driver}
+func (d Driver) execute(st StrategyExecutor) {
+	st.execute(d)
+}
+
+func (f findStrategyV2) execute(d Driver) {
+	v := loopStrategyRequestV2{f, f.Command, d}
 	v.performStrategyV2()
 }
 
-func (f displayStrategy) execute() {
-	v := loopStrategyRequestV2{f, f.Command, f.Driver}
+func (f displayStrategy) execute(d Driver) {
+	v := loopStrategyRequestV2{f, f.Command, d}
 	v.performStrategyV2()
 }
 
-func (is isDisplayStrategy) execute() {
-	v := loopStrategyRequestV2{is, is.Command, is.Driver}
+func (is isDisplayStrategy) execute(d Driver) {
+	v := loopStrategyRequestV2{is, is.Command, d}
 	v.performStrategyV2()
 }
 
-func (is attrStrategy) execute() {
-	v := loopStrategyRequestV2{is, is.Command, is.Driver}
+func (is attrStrategy) execute(d Driver) {
+	v := loopStrategyRequestV2{is, is.Command, d}
 	v.performStrategyV2()
 }
 
-func (is hasAttributeStrategy) execute() {
-	v := loopStrategyRequestV2{is, is.Command, is.Driver}
+func (is hasAttributeStrategy) execute(d Driver) {
+	v := loopStrategyRequestV2{is, is.Command, d}
 	v.performStrategyV2()
 }
 
-func (d defaultStrategy) execute() {
+func (d defaultStrategy) execute(dr Driver) {
 	var cPath string = d.Command.Path
 	if len(d.Command.PathFormatArgs) != 0 {
 		cPath = fmt.Sprintf(d.Command.Path, d.Command.PathFormatArgs...)
 	}
 
-	url := fmt.Sprintf("%s%s", d.Client.BaseURL, cPath)
+	url := fmt.Sprintf("%s%s", dr.Client.BaseURL, cPath)
 
 	req, err := http.NewRequest(d.Command.Method, url, bytes.NewBuffer(d.Command.Data))
 	if err != nil {
@@ -112,7 +109,7 @@ func (d defaultStrategy) execute() {
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
 
-	res, err := d.Client.HTTPClient.Do(req)
+	res, err := dr.Client.HTTPClient.Do(req)
 	if err != nil {
 		log.Println("error on strategy exec:", err)
 		res.Body.Close()

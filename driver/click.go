@@ -8,34 +8,24 @@ import (
 )
 
 func (el Element) Click() Element {
-	st := defaultStrategy{
-		Driver: el.Driver,
-		Command: Command{
-			Path:           PathElementClick,
-			Method:         http.MethodPost,
-			PathFormatArgs: []any{el.Id},
-			Data:           marshalData(Empty{}),
-		},
-	}
-
-	st.execute()
+	el.Driver.execute(defaultStrategy{Command{
+		Path:           PathElementClick,
+		Method:         http.MethodPost,
+		PathFormatArgs: []any{el.Id},
+		Data:           marshalData(Empty{}),
+	}})
 
 	return el
 }
 
 // https://github.com/w3c/webdriver/issues/915#issuecomment-301100300
 func (el Element) DoubleClick() Element {
-	st := defaultStrategy{
-		Driver: el.Driver,
-		Command: Command{
+	el.Driver.execute(defaultStrategy{Command{
 			Path:           PathElementClick,
 			Method:         http.MethodPost,
 			PathFormatArgs: []any{el.Id},
 			Data:           marshalData(Empty{}),
-		},
-	}
-
-	st.execute()
+		}})
 
 	return el
 }

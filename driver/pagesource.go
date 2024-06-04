@@ -8,16 +8,11 @@ import (
 func (d Driver) PageSource() {
 	s := new(struct{ Value string })
 
-	st := defaultStrategy{
-		Driver: d,
-		Command: Command{
-			Path:         "/source",
-			Method:       http.MethodGet,
-			ResponseData: s,
-		},
-	}
-
-	st.execute()
+	d.execute(defaultStrategy{Command{
+		Path:         "/source",
+		Method:       http.MethodGet,
+		ResponseData: s,
+	}})
 
 	log.Println(string(s.Value))
 }

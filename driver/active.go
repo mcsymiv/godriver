@@ -7,16 +7,11 @@ import (
 func (d Driver) Active() Element {
 	el := new(struct{ Value map[string]string })
 
-	st := defaultStrategy{
-		Driver: d,
-		Command: Command{
-			Path:         PathElementActive,
-			Method:       http.MethodGet,
-			ResponseData: el,
-		},
-	}
-
-	st.execute()
+	d.execute(defaultStrategy{Command{
+		Path:         PathElementActive,
+		Method:       http.MethodGet,
+		ResponseData: el,
+	}})
 
 	eId := elementID(el.Value)
 
