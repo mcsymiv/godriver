@@ -15,7 +15,7 @@ func attrCommand(e Element, a string) Command {
 func (e Element) Attr(a string) string {
 	attrResponse := new(struct{ Value string })
 
-	e.Driver.execute(attrStrategy{
+	e.Driver.execute(retryStrategy{
 		Command: Command{
 			PathFormatArgs: []any{e.Id, a},
 			Path:           PathElementAttribute,

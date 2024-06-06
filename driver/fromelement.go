@@ -9,7 +9,7 @@ import (
 func from(b by.Selector, e Element) (Element, error) {
 	el := new(struct{ Value map[string]string })
 
-	e.Driver.execute(findStrategyV2{Command{
+	e.Driver.execute(retryStrategy{Command{
 		Path:           PathElementFromElement,
 		PathFormatArgs: []any{e.Id},
 		Method:         http.MethodPost,
@@ -46,7 +46,7 @@ func (e Element) From(s string) Element {
 func (e Element) Froms(by by.Selector) []Element {
 	el := new(struct{ Value []map[string]string })
 
-	e.Driver.execute(findStrategyV2{Command{
+	e.Driver.execute(retryStrategy{Command{
 		Path:           PathElementsFromElement,
 		PathFormatArgs: []any{e.Id},
 		Method:         http.MethodPost,
