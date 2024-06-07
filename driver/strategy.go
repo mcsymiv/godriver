@@ -13,6 +13,7 @@ import (
 	"github.com/mcsymiv/godriver/config"
 )
 
+// StrategyExecutor
 type StrategyExecutor interface {
 	execute(Driver)
 }
@@ -36,13 +37,15 @@ type retryStrategyRequest struct {
 
 // defaultStrategy
 // executes simple Command Request
-// Creates new http.Client
 type defaultStrategy struct {
 	Command
 }
 
 // retryStrategy
-// TODO: explain yourself retryStrategy
+// executes Command Request
+// N times until config.TestSetting.TimeoutFind is reached
+// TimeoutFind, i.e. find elemenent timeout original naming
+// Usage for commands that require explicit await set globaly
 type retryStrategy struct {
 	Command
 }
@@ -84,14 +87,14 @@ func (f hasAttributeStrategy) execute(d Driver) {
 // wraps loopRequest strategy
 // unravels cmd data, i.e. post body, url etc.
 // performs NewRequest in loop
-// passes response to s*loopStrategyRequest (find, display, attribute)
 func (r retryStrategyRequest) perform(cmd Command, d Driver) {
 	var cPath string = cmd.Path
 	if len(cmd.PathFormatArgs) != 0 {
 		cPath = fmt.Sprintf(cmd.Path, cmd.PathFormatArgs...)
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	url := fmt.Sprintf("%s%s", d.Client.BaseURL, cPath)
 	start := time.Now()
@@ -227,7 +230,10 @@ func (d defaultStrategy) execute(dr Driver) {
 
 	url := fmt.Sprintf("%s%s", dr.Client.BaseURL, cPath)
 
-	req, err := http.NewRequest(d.Command.Method, url, bytes.NewBuffer(d.Command.Data))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, d.Command.Method, url, bytes.NewBuffer(d.Command.Data))
 	if err != nil {
 		panic(err)
 	}
