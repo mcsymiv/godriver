@@ -5,26 +5,12 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/mcsymiv/godriver/config"
 	"github.com/mcsymiv/godriver/file"
 )
 
-func (d Driver) ExecuteScript(fName string, args ...string) interface{} {
-	// replace to format package call
-	f := file.FindFile("../js", fName)
-
-	// only one arg will be applied
-	// slice serves as "optional" argument
-	if len(args) == 1 {
-		for _, arg := range args {
-			act := &file.ReplaceWord{
-				ReplaceLine: &file.ReplaceLine{
-					Old: "<placeholder>",
-					New: arg,
-				},
-			}
-			file.Exec(act, f)
-		}
-	}
+func (d Driver) ExecuteScript(fName string, args ...interface{}) interface{} {
+	f := file.FindFile(config.TestSetting.JsFilesPath, fName)
 
 	c, err := os.ReadFile(f)
 	if err != nil {
@@ -32,7 +18,7 @@ func (d Driver) ExecuteScript(fName string, args ...string) interface{} {
 		return nil
 	}
 
-	rtn, err := executeScriptSync(d, string(c))
+	rtn, err := executeScriptSync(d, string(c), args)
 	if err != nil {
 		log.Println("error on execute script", err)
 		return nil
@@ -52,25 +38,21 @@ func (d Driver) Script(script string, args ...interface{}) interface{} {
 }
 
 // executeScriptSync
-// TODO: possible issue with ExecuteCmd bRes handling after refactor
-// ExecuteCmd returns slice of buffered responses
 func executeScriptSync(d Driver, script string, args ...interface{}) (interface{}, error) {
 	if args == nil {
 		args = make([]interface{}, 0)
 	}
 
 	rr := new(struct{ Value interface{} })
-	st := defaultStrategy{
-		Driver: d,
-		Command: Command{
-			Path:   "/execute/sync",
-			Method: http.MethodPost,
-			Data: marshalData(map[string]interface{}{
-				"script": script,
-				"args":   args,
-			}),
-		}}
+	d.execute(defaultStrategy{Command{
+		Path:   PathDriverScriptSync,
+		Method: http.MethodPost,
+		Data: marshalData(map[string]interface{}{
+			"script": script,
+			"args":   args,
+		}),
+		ResponseData: rr,
+	}})
 
-	st.execute()
 	return rr.Value, nil
 }

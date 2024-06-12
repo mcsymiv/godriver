@@ -21,19 +21,9 @@ func newFrameCommand(el Element) Command {
 }
 
 func (el Element) SwitchFrame() {
-	st := defaultStrategy{
-		Driver:  el.Driver,
-		Command: newFrameCommand(el),
-	}
-
-	st.execute()
+	el.Driver.execute(defaultStrategy{newFrameCommand(el)})
 }
 
 func (el Element) SwitchFrameParent() {
-	st := defaultStrategy{
-		Driver:  el.Driver,
-		Command: newFrameCommand(Element{}),
-	}
-
-	st.execute()
+	el.Driver.execute(defaultStrategy{newFrameCommand(Element{})})
 }

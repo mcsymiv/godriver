@@ -20,6 +20,7 @@ const (
 	PathDriverWindowNew     = "/window/new"
 	PathDriverWindowHandles = "/window/handles"
 	PathDriverScreenshot    = "/screenshot"
+	PathDriverScriptSync    = "/execute/sync"
 
 	PathElementFind         = "/element"
 	PathElementsFind        = "/elements"
@@ -108,8 +109,6 @@ func getDriverStatus(caps *capabilities.Capabilities) (*DriverStatus, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	defer req.Body.Close()
 
 	req.Header.Add("Accept", "json/application")
 	c := &http.Client{}

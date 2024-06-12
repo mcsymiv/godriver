@@ -5,16 +5,12 @@ import (
 )
 
 func (d Driver) Url(u string) Driver {
-	st := defaultStrategy{
-		Driver: d,
-		Command: Command{
-			Path:   PathDriverUrl,
-			Method: http.MethodPost,
-			Data:   marshalData(map[string]string{"url": u}),
-		},
-	}
+	d.execute(defaultStrategy{Command{
+		Path:   PathDriverUrl,
+		Method: http.MethodPost,
+		Data:   marshalData(map[string]string{"url": u}),
+	}})
 
-	st.execute()
 	return d
 }
 
@@ -26,29 +22,19 @@ func (d Driver) OpenInNewTab(u string) {
 }
 
 func (d Driver) Refresh() {
-	st := defaultStrategy{
-		Driver: d,
-		Command: Command{
-			Path:   PathDriverRefresh,
-			Method: http.MethodPost,
-			Data:   marshalData(Empty{}),
-		},
-	}
-
-	st.execute()
+	d.execute(defaultStrategy{Command{
+		Path:   PathDriverRefresh,
+		Method: http.MethodPost,
+		Data:   marshalData(Empty{}),
+	}})
 }
 
 func (d Driver) NewTab() {
-	st := defaultStrategy{
-		Driver: d,
-		Command: Command{
-			Path:   PathDriverWindowNew,
-			Method: http.MethodPost,
-			Data:   marshalData(Empty{}),
-		},
-	}
-
-	st.execute()
+	d.execute(defaultStrategy{Command{
+		Path:   PathDriverWindowNew,
+		Method: http.MethodPost,
+		Data:   marshalData(Empty{}),
+	}})
 }
 
 // SwitchToTab
@@ -56,31 +42,23 @@ func (d Driver) NewTab() {
 func (d Driver) Tab(n int) Driver {
 	h := getTabs(d)
 
-	st := defaultStrategy{
-		Driver: d,
-		Command: Command{
-			Path:   PathDriverWindow,
-			Method: http.MethodPost,
-			Data:   marshalData(map[string]string{"handle": h[n]}),
-		},
-	}
+	d.execute(defaultStrategy{Command{
+		Path:   PathDriverWindow,
+		Method: http.MethodPost,
+		Data:   marshalData(map[string]string{"handle": h[n]}),
+	}})
 
-	st.execute()
 	return d
 }
 
 func getTabs(d Driver) []string {
 	h := new(struct{ Value []string })
 
-	st := defaultStrategy{
-		Driver: d,
-		Command: Command{
-			Path:         PathDriverWindowHandles,
-			Method:       http.MethodGet,
-			ResponseData: h,
-		},
-	}
+	d.execute(defaultStrategy{Command{
+		Path:         PathDriverWindowHandles,
+		Method:       http.MethodGet,
+		ResponseData: h,
+	}})
 
-	st.execute()
 	return h.Value
 }

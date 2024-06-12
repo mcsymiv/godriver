@@ -10,17 +10,12 @@ import (
 // e.g.: d.F("selector").Is().Attr("href")
 // will panic if found elemet is not displayed
 func (e Element) Is() Element {
-	st := displayStrategy{
-		Driver: e.Driver,
-		Command: Command{
-			Path:           PathElementDisplayed,
-			Method:         http.MethodGet,
-			PathFormatArgs: []any{e.Id},
-			Data:           marshalData(Empty{}),
-		},
-	}
-
-	st.execute()
+	e.Driver.execute(displayStrategy{Command{
+		Path:           PathElementDisplayed,
+		Method:         http.MethodGet,
+		PathFormatArgs: []any{e.Id},
+		Data:           marshalData(Empty{}),
+	}})
 
 	return e
 }
@@ -32,18 +27,13 @@ func (e Element) Is() Element {
 func (e Element) IsDisplayed() bool {
 	var is bool
 
-	st := isDisplayStrategy{
-		Driver: e.Driver,
-		Command: Command{
-			Path:           PathElementDisplayed,
-			Method:         http.MethodGet,
-			PathFormatArgs: []any{e.Id},
-			Data:           marshalData(Empty{}),
-			ResponseData:   is,
-		},
-	}
-
-	st.execute()
+	e.Driver.execute(isDisplayStrategy{Command{
+		Path:           PathElementDisplayed,
+		Method:         http.MethodGet,
+		PathFormatArgs: []any{e.Id},
+		Data:           marshalData(Empty{}),
+		ResponseData:   is,
+	}})
 
 	return is
 }

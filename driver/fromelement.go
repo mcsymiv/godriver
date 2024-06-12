@@ -9,21 +9,16 @@ import (
 func from(b by.Selector, e Element) (Element, error) {
 	el := new(struct{ Value map[string]string })
 
-	st := findStrategyV2{
-		Driver: e.Driver,
-		Command: Command{
-			Path:           PathElementFromElement,
-			PathFormatArgs: []any{e.Id},
-			Method:         http.MethodPost,
-			ResponseData:   el,
-			Data: marshalData(&JsonFindUsing{
-				Using: b.Using,
-				Value: b.Value,
-			}),
-		},
-	}
-
-	st.execute()
+	e.Driver.execute(findStrategyV2{Command{
+		Path:           PathElementFromElement,
+		PathFormatArgs: []any{e.Id},
+		Method:         http.MethodPost,
+		ResponseData:   el,
+		Data: marshalData(&JsonFindUsing{
+			Using: b.Using,
+			Value: b.Value,
+		}),
+	}})
 
 	eId := elementID(el.Value)
 
@@ -51,21 +46,16 @@ func (e Element) From(s string) Element {
 func (e Element) Froms(by by.Selector) []Element {
 	el := new(struct{ Value []map[string]string })
 
-	st := findStrategyV2{
-		Driver: e.Driver,
-		Command: Command{
-			Path:           PathElementsFromElement,
-			PathFormatArgs: []any{e.Id},
-			Method:         http.MethodPost,
-			ResponseData:   el,
-			Data: marshalData(&JsonFindUsing{
-				Using: by.Using,
-				Value: by.Value,
-			}),
-		},
-	}
-
-	st.execute()
+	e.Driver.execute(findStrategyV2{Command{
+		Path:           PathElementsFromElement,
+		PathFormatArgs: []any{e.Id},
+		Method:         http.MethodPost,
+		ResponseData:   el,
+		Data: marshalData(&JsonFindUsing{
+			Using: by.Using,
+			Value: by.Value,
+		}),
+	}})
 
 	elementsIds := elementsID(el.Value)
 
