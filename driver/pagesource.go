@@ -7,10 +7,12 @@ import (
 
 func (d Driver) PageSource() {
 	s := new(struct{ Value string })
-	d.Client.ExecuteCommand(&Command{
-		Path:   "/source",
-		Method: http.MethodGet,
-	}, s)
+
+	d.execute(defaultStrategy{Command{
+		Path:         "/source",
+		Method:       http.MethodGet,
+		ResponseData: s,
+	}})
 
 	log.Println(string(s.Value))
 }

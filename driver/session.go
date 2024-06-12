@@ -60,10 +60,8 @@ func newSession(caps *capabilities.Capabilities) (*Session, error) {
 // Quit
 // closes active webdriver session
 func (d Driver) Quit() {
-	q := &Command{
+	d.execute(defaultStrategy{Command{
 		Path:   "",
 		Method: http.MethodDelete,
-	}
-
-	d.Client.ExecuteCommand(q, nil)
+	}})
 }

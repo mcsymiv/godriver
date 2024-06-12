@@ -26,18 +26,21 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func newScreenShotCommand() *Command {
-	return &Command{
+func newScreenShotCommand() Command {
+	return Command{
 		Path:   PathDriverScreenshot,
 		Method: http.MethodGet,
 	}
 }
 
-func screenshot(d *Driver) error {
-	op := newScreenShotCommand()
+func screenshot(d Driver) error {
 
 	data := new(struct{ Value string })
-	d.Client.ExecuteCommand(op, data)
+	d.execute(defaultStrategy{Command{
+		Path:         PathDriverScreenshot,
+		Method:       http.MethodGet,
+		ResponseData: data,
+	}})
 
 	decodedImage, err := base64.StdEncoding.DecodeString(data.Value)
 	if err != nil {
@@ -67,7 +70,7 @@ func screenshot(d *Driver) error {
 	return nil
 }
 
-func (d *Driver) Screenshot() {
+func (d Driver) Screenshot() {
 	err := screenshot(d)
 	if err != nil {
 		log.Println("error on screenshot:", err)

@@ -4,16 +4,18 @@ import (
 	"net/http"
 )
 
-func (d *Driver) Active() *Element {
+func (d Driver) Active() Element {
 	el := new(struct{ Value map[string]string })
-	d.Client.ExecuteCommand(&Command{
-		Path:   PathElementActive,
-		Method: http.MethodGet,
-	}, el)
+
+	d.execute(defaultStrategy{Command{
+		Path:         PathElementActive,
+		Method:       http.MethodGet,
+		ResponseData: el,
+	}})
 
 	eId := elementID(el.Value)
 
-	return &Element{
+	return Element{
 		Id:     eId,
 		Driver: d,
 	}

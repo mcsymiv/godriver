@@ -2,13 +2,15 @@ package driver
 
 import "net/http"
 
-func (el *Element) Text() string {
+func (el Element) Text() string {
 	t := new(struct{ Value string })
-	el.Client.ExecuteCommand(&Command{
-		Path:           PathElementText, 
+
+	el.Driver.execute(defaultStrategy{Command{
+		Path:           PathElementText,
 		PathFormatArgs: []any{el.Id},
 		Method:         http.MethodGet,
-	}, t)
+		ResponseData:   t,
+	}})
 
 	return t.Value
 }

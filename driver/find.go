@@ -6,49 +6,47 @@ import (
 	"github.com/mcsymiv/godriver/by"
 )
 
-func f(b by.Selector, d *Driver) (*Element, error) {
+func f(b by.Selector, d Driver) (Element, error) {
 	el := new(struct{ Value map[string]string })
-	d.Client.ExecuteCommand(&Command{
-		Path:   PathElementFind,
-		Method: http.MethodPost,
+
+	d.execute(retryStrategy{Command{
+		Path:         PathElementFind,
+		Method:       http.MethodPost,
+		ResponseData: el,
 		Data: marshalData(&JsonFindUsing{
 			Using: b.Using,
 			Value: b.Value,
 		}),
-
-		Strategy: &findStrategy{
-			driver: d,
-		},
-	}, el)
+	}})
 
 	eId := elementID(el.Value)
 
-	return &Element{
+	return Element{
 		Id:       eId,
 		Driver:   d,
 		Selector: b,
 	}, nil
 }
 
-func finds(by by.Selector, d *Driver) ([]*Element, error) {
-	op := &Command{
-		Path:   PathElementsFind,
-		Method: http.MethodPost,
-		Data: marshalData(&JsonFindUsing{
-			Using: by.Using,
-			Value: by.Value,
-		}),
-		Strategy: &findStrategy{d},
-	}
-
+func finds(b by.Selector, d Driver) ([]Element, error) {
 	el := new(struct{ Value []map[string]string })
-	d.Client.ExecuteCommand(op, el)
+
+	d.execute(retryStrategy{Command{
+		Path:         PathElementsFind,
+		Method:       http.MethodPost,
+		ResponseData: el,
+		Data: marshalData(&JsonFindUsing{
+			Using: b.Using,
+			Value: b.Value,
+		}),
+	}})
+
 	elementsId := elementsID(el.Value)
 
-	var els []*Element
+	var els []Element
 
 	for _, id := range elementsId {
-		els = append(els, &Element{
+		els = append(els, Element{
 			Id:     id,
 			Driver: d,
 		})

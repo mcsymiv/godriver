@@ -4,14 +4,14 @@ import (
 	"net/http"
 )
 
-func newFrameCommand(el *Element) *Command {
+func newFrameCommand(el Element) Command {
 	var elFrameId map[string]string
 
-	if el != nil {
+	if el.Id == "" {
 		elFrameId = el.ElementIdentifier()
 	}
 
-	return &Command{
+	return Command{
 		Path:   PathDriverFrame,
 		Method: http.MethodPost,
 		Data: marshalData(map[string]interface{}{
@@ -20,12 +20,10 @@ func newFrameCommand(el *Element) *Command {
 	}
 }
 
-func (el *Element) SwitchFrame() {
-	op := newFrameCommand(el)
-	el.Client.ExecuteCommand(op, nil)
+func (el Element) SwitchFrame() {
+	el.Driver.execute(defaultStrategy{newFrameCommand(el)})
 }
 
-func (el *Element) SwitchFrameParent() {
-	op := newFrameCommand(nil)
-	el.Client.ExecuteCommand(op, nil)
+func (el Element) SwitchFrameParent() {
+	el.Driver.execute(defaultStrategy{newFrameCommand(Element{})})
 }
