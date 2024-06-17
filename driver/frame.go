@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func newFrameCommand(el Element) Command {
+func newFrameCommand(el *Element) Command {
 	var elFrameId map[string]string
 
 	if el.Id == "" {
@@ -20,10 +20,10 @@ func newFrameCommand(el Element) Command {
 	}
 }
 
-func (el Element) SwitchFrame() {
+func (el *Element) SwitchFrame() {
 	el.Driver.execute(defaultStrategy{newFrameCommand(el)})
 }
 
-func (el Element) SwitchFrameParent() {
-	el.Driver.execute(defaultStrategy{newFrameCommand(Element{})})
+func (el *Element) SwitchFrameParent() {
+	el.Driver.execute(defaultStrategy{newFrameCommand(nil)})
 }

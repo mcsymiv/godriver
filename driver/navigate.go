@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func (d Driver) Url(u string) Driver {
+func (d *Driver) Url(u string) *Driver {
 	d.execute(defaultStrategy{Command{
 		Path:   PathDriverUrl,
 		Method: http.MethodPost,
@@ -14,14 +14,14 @@ func (d Driver) Url(u string) Driver {
 	return d
 }
 
-func (d Driver) OpenInNewTab(u string) {
+func (d *Driver) OpenInNewTab(u string) {
 	d.NewTab()
 	tNum := getTabs(d)
 	d.Tab(len(tNum) - 1)
 	d.Url(u)
 }
 
-func (d Driver) Refresh() {
+func (d *Driver) Refresh() {
 	d.execute(defaultStrategy{Command{
 		Path:   PathDriverRefresh,
 		Method: http.MethodPost,
@@ -29,7 +29,7 @@ func (d Driver) Refresh() {
 	}})
 }
 
-func (d Driver) NewTab() {
+func (d *Driver) NewTab() {
 	d.execute(defaultStrategy{Command{
 		Path:   PathDriverWindowNew,
 		Method: http.MethodPost,
@@ -39,7 +39,7 @@ func (d Driver) NewTab() {
 
 // SwitchToTab
 // Swiches context to N tab in browser, where 0 is first tab
-func (d Driver) Tab(n int) Driver {
+func (d *Driver) Tab(n int) *Driver {
 	h := getTabs(d)
 
 	d.execute(defaultStrategy{Command{
@@ -51,7 +51,7 @@ func (d Driver) Tab(n int) Driver {
 	return d
 }
 
-func getTabs(d Driver) []string {
+func getTabs(d *Driver) []string {
 	h := new(struct{ Value []string })
 
 	d.execute(defaultStrategy{Command{

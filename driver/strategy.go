@@ -15,14 +15,14 @@ import (
 
 // StrategyExecutor
 type StrategyExecutor interface {
-	execute(Driver)
+	execute(*Driver)
 }
 
 type retryRequester interface {
 	verify(*http.Response, interface{}) bool
 }
 
-func (d Driver) execute(st StrategyExecutor) {
+func (d *Driver) execute(st StrategyExecutor) {
 	st.execute(d)
 }
 
@@ -63,22 +63,22 @@ type hasAttributeStrategy struct {
 	attrToContain string
 }
 
-func (f retryStrategy) execute(d Driver) {
+func (f retryStrategy) execute(d *Driver) {
 	r := retryStrategyRequest{f}
 	r.perform(f.Command, d)
 }
 
-func (f displayStrategy) execute(d Driver) {
+func (f displayStrategy) execute(d *Driver) {
 	v := retryStrategyRequest{f}
 	v.perform(f.Command, d)
 }
 
-func (f isDisplayStrategy) execute(d Driver) {
+func (f isDisplayStrategy) execute(d *Driver) {
 	v := retryStrategyRequest{f}
 	v.perform(f.Command, d)
 }
 
-func (f hasAttributeStrategy) execute(d Driver) {
+func (f hasAttributeStrategy) execute(d *Driver) {
 	v := retryStrategyRequest{f}
 	v.perform(f.Command, d)
 }
@@ -87,7 +87,7 @@ func (f hasAttributeStrategy) execute(d Driver) {
 // wraps loopRequest strategy
 // unravels cmd data, i.e. post body, url etc.
 // performs NewRequest in loop
-func (r retryStrategyRequest) perform(cmd Command, d Driver) {
+func (r retryStrategyRequest) perform(cmd Command, d *Driver) {
 	var cPath string = cmd.Path
 	if len(cmd.PathFormatArgs) != 0 {
 		cPath = fmt.Sprintf(cmd.Path, cmd.PathFormatArgs...)
@@ -104,6 +104,7 @@ func (r retryStrategyRequest) perform(cmd Command, d Driver) {
 		req, err := http.NewRequestWithContext(ctx, cmd.Method, url, bytes.NewBuffer(cmd.Data))
 		if err != nil {
 			log.Println("error on NewRequest")
+			req.Body.Close()
 			panic(err)
 		}
 
@@ -126,7 +127,9 @@ func (r retryStrategyRequest) perform(cmd Command, d Driver) {
 		res.Body.Close()
 
 		if time.Now().After(end) {
+			log.Println("timeout")
 			if config.TestSetting.ScreenshotOnFail {
+				log.Println("screnshot")
 				d.Screenshot()
 			}
 
@@ -222,7 +225,7 @@ func (h hasAttributeStrategy) verify(res *http.Response, a interface{}) bool {
 	return false
 }
 
-func (d defaultStrategy) execute(dr Driver) {
+func (d defaultStrategy) execute(dr *Driver) {
 	var cPath string = d.Command.Path
 	if len(d.Command.PathFormatArgs) != 0 {
 		cPath = fmt.Sprintf(d.Command.Path, d.Command.PathFormatArgs...)

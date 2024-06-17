@@ -6,7 +6,7 @@ import (
 	"github.com/mcsymiv/godriver/by"
 )
 
-func from(b by.Selector, e Element) (Element, error) {
+func from(b by.Selector, e *Element) (*Element, error) {
 	el := new(struct{ Value map[string]string })
 
 	e.Driver.execute(retryStrategy{Command{
@@ -22,7 +22,7 @@ func from(b by.Selector, e Element) (Element, error) {
 
 	eId := elementID(el.Value)
 
-	return Element{
+	return &Element{
 		Id:       eId,
 		Driver:   e.Driver,
 		Selector: b,
@@ -32,18 +32,18 @@ func from(b by.Selector, e Element) (Element, error) {
 
 // From
 // Finds Element from receiver Element
-func (e Element) From(s string) Element {
+func (e *Element) From(s string) *Element {
 	by := by.Strategy(s)
 
 	el, err := from(by, e)
 	if err != nil {
-		return Element{}
+		return nil
 	}
 
 	return el
 }
 
-func (e Element) Froms(by by.Selector) []Element {
+func (e *Element) Froms(by by.Selector) []*Element {
 	el := new(struct{ Value []map[string]string })
 
 	e.Driver.execute(retryStrategy{Command{
@@ -59,10 +59,10 @@ func (e Element) Froms(by by.Selector) []Element {
 
 	elementsIds := elementsID(el.Value)
 
-	var els []Element
+	var els []*Element
 
 	for _, id := range elementsIds {
-		els = append(els, Element{
+		els = append(els, &Element{
 			Id:     id,
 			Driver: e.Driver,
 		})

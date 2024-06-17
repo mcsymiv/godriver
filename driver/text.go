@@ -2,7 +2,7 @@ package driver
 
 import "net/http"
 
-func (el Element) Text() string {
+func (el *Element) Text() string {
 	t := new(struct{ Value string })
 
 	el.Driver.execute(defaultStrategy{Command{

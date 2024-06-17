@@ -30,7 +30,7 @@ func (el Element) DoubleClick() Element {
 	return el
 }
 
-func (d Driver) Cl(selector string) Element {
+func (d *Driver) Cl(selector string) Element {
 	w3cBy := by.Strategy(selector)
 
 	el, err := f(w3cBy, d)

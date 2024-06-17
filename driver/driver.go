@@ -48,7 +48,7 @@ type Driver struct {
 // 2. wait for service process to start. requests /status with 2 second timeuout
 // 3. creates new session to use
 // 4. initializes new client
-func NewDriver(capsFn ...capabilities.CapabilitiesFunc) Driver {
+func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 	caps := capabilities.DefaultCapabilities()
 	for _, capFn := range capsFn {
 		capFn(&caps)
@@ -90,7 +90,7 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) Driver {
 
 	config.TestSetting = config.DefaultSetting()
 
-	return Driver{
+	return &Driver{
 		Client:       c,
 		ServiceCmd:   cmd,
 		Capabilities: &caps,

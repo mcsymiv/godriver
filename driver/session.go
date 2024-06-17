@@ -59,7 +59,7 @@ func newSession(caps *capabilities.Capabilities) (*Session, error) {
 
 // Quit
 // closes active webdriver session
-func (d Driver) Quit() {
+func (d *Driver) Quit() {
 	d.execute(defaultStrategy{Command{
 		Path:   "",
 		Method: http.MethodDelete,

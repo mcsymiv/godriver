@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (d Driver) PageSource() {
+func (d *Driver) PageSource() {
 	s := new(struct{ Value string })
 
 	d.execute(defaultStrategy{Command{

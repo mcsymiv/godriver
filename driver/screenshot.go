@@ -33,7 +33,7 @@ func newScreenShotCommand() Command {
 	}
 }
 
-func screenshot(d Driver) error {
+func screenshot(d *Driver) error {
 
 	data := new(struct{ Value string })
 	d.execute(defaultStrategy{Command{
@@ -70,7 +70,7 @@ func screenshot(d Driver) error {
 	return nil
 }
 
-func (d Driver) Screenshot() {
+func (d *Driver) Screenshot() {
 	err := screenshot(d)
 	if err != nil {
 		log.Println("error on screenshot:", err)

@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func attrCommand(e Element, a string) Command {
+func attrCommand(e *Element, a string) Command {
 	return Command{
 		PathFormatArgs: []any{e.Id, a},
 		Path:           PathElementAttribute,
@@ -12,7 +12,7 @@ func attrCommand(e Element, a string) Command {
 	}
 }
 
-func (e Element) Attr(a string) string {
+func (e *Element) Attr(a string) string {
 	attrResponse := new(struct{ Value string })
 
 	e.Driver.execute(retryStrategy{
@@ -27,7 +27,7 @@ func (e Element) Attr(a string) string {
 	return attrResponse.Value
 }
 
-func (e Element) HasAttr(a string) bool {
+func (e *Element) HasAttr(a string) bool {
 	var hasAttr bool
 
 	cmd := attrCommand(e, a)
@@ -38,7 +38,7 @@ func (e Element) HasAttr(a string) bool {
 	return hasAttr
 }
 
-func (e Element) IsAttr(a string) bool {
+func (e *Element) IsAttr(a string) bool {
 	attrResponse := new(struct{ Value string })
 
 	cmd := attrCommand(e, a)

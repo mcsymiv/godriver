@@ -9,7 +9,7 @@ import (
 	"github.com/mcsymiv/godriver/file"
 )
 
-func (d Driver) ExecuteScript(fName string, args ...interface{}) interface{} {
+func (d *Driver) ExecuteScript(fName string, args ...interface{}) interface{} {
 	f := file.FindFile(config.TestSetting.JsFilesPath, fName)
 
 	c, err := os.ReadFile(f)
@@ -27,7 +27,7 @@ func (d Driver) ExecuteScript(fName string, args ...interface{}) interface{} {
 	return rtn
 }
 
-func (d Driver) Script(script string, args ...interface{}) interface{} {
+func (d *Driver) Script(script string, args ...interface{}) interface{} {
 	res, err := executeScriptSync(d, script, args...)
 	if err != nil {
 		log.Println("error execute script:", err)
@@ -38,7 +38,7 @@ func (d Driver) Script(script string, args ...interface{}) interface{} {
 }
 
 // executeScriptSync
-func executeScriptSync(d Driver, script string, args ...interface{}) (interface{}, error) {
+func executeScriptSync(d *Driver, script string, args ...interface{}) (interface{}, error) {
 	if args == nil {
 		args = make([]interface{}, 0)
 	}

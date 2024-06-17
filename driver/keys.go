@@ -67,7 +67,7 @@ const (
 	MetaKey       = string('\ue03d')
 )
 
-func (el Element) Key(s string) Element {
+func (el *Element) Key(s string) *Element {
 	el.Driver.execute(defaultStrategy{Command{
 		Path:           PathElementValue,
 		PathFormatArgs: []any{el.Id},

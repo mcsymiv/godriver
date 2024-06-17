@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func (d Driver) Active() Element {
+func (d *Driver) Active() *Element {
 	el := new(struct{ Value map[string]string })
 
 	d.execute(defaultStrategy{Command{
@@ -15,7 +15,7 @@ func (d Driver) Active() Element {
 
 	eId := elementID(el.Value)
 
-	return Element{
+	return &Element{
 		Id:     eId,
 		Driver: d,
 	}
