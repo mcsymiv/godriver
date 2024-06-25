@@ -13,7 +13,7 @@ import (
 
 func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	d := driver.NewDriver(caps...)
-	if &d == nil {
+	if d == nil {
 		log.Fatal("Unable to start driver")
 	}
 
