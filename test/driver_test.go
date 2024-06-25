@@ -24,7 +24,7 @@ func TestDriver(t *testing.T) {
 	repo := "/repository/download/"
 	allure := ":id/allure-report.zip!/allure-report-test/index.html#suites"
 	host := os.Getenv("DOWNLOAD_HOST")
-	testEnv := "dev01"
+	testEnv := "review01"
 
 	var rLinks []string
 	sNames := []string{

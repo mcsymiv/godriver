@@ -3,3 +3,4 @@ config/.env
 artifacts/*
 test/bg*.go
 test/home*.go
+test/g*.go

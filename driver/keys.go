@@ -80,7 +80,7 @@ func (el *Element) Key(s string) *Element {
 	return el
 }
 
-func (el Element) Clear() Element {
+func (el *Element) Clear() *Element {
 	el.Driver.execute(defaultStrategy{
 		Command: Command{
 			Path:           PathElementClear,
