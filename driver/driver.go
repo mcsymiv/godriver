@@ -59,7 +59,7 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 	// starts driver service with provided capabilities
 	cmd, err := newService(&caps)
 	if err != nil {
-		log.Fatal("unable to start driver service", err)
+		panic(fmt.Sprintf("unable to start driver service: %v", err))
 	}
 
 	// waitForDriverService
@@ -67,14 +67,14 @@ func NewDriver(capsFn ...capabilities.CapabilitiesFunc) *Driver {
 	// waits for driver to be ready to accept incoming requests
 	err = waitForDriverService(cmd, &caps)
 	if err != nil {
-		log.Fatal("driver start timed out", err)
+		panic(fmt.Sprintf("driver start timed out: %v", err))
 	}
 
 	// newSession
 	// return session id to use
 	s, err := newSession(&caps)
 	if err != nil || s == nil {
-		log.Fatal("unable to start session", err)
+		panic(fmt.Sprintf("unable to start session: %v", err))
 	}
 
 	// newClient

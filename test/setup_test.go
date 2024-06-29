@@ -1,7 +1,6 @@
 package test
 
 import (
-	"log"
 	"os"
 
 	"github.com/mcsymiv/godriver/capabilities"
@@ -14,7 +13,7 @@ import (
 func Driver(caps ...capabilities.CapabilitiesFunc) (*driver.Driver, func()) {
 	d := driver.NewDriver(caps...)
 	if d == nil {
-		log.Fatal("Unable to start driver")
+		panic("Unable to start driver")
 	}
 
 	config.TestSetting = config.DefaultSetting()

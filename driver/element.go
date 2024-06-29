@@ -1,7 +1,7 @@
 package driver
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/mcsymiv/godriver/by"
 )
@@ -51,7 +51,7 @@ func (e Element) ElementIdentifier() map[string]string {
 func elementID(v map[string]string) string {
 	id, ok := v[WebElementIdentifier]
 	if !ok || id == "" {
-		log.Println("Error on find element", v)
+		panic(fmt.Sprintf("Error on find element: %v", v))
 	}
 	return id
 }
@@ -62,7 +62,7 @@ func elementsID(v []map[string]string) []string {
 	for _, el := range v {
 		id, ok := el[WebElementIdentifier]
 		if !ok || id == "" {
-			log.Println("Error on find elements", v)
+			panic(fmt.Sprintf("Error on find elements: %v", v))
 		}
 		els = append(els, id)
 	}
